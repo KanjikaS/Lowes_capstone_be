@@ -9,5 +9,6 @@ public class ServiceRequestDto {
     private Long applianceId;
     private String issueDescription;
     private LocalDateTime preferredSlot;
+    private Long technicianId;
 }
 
