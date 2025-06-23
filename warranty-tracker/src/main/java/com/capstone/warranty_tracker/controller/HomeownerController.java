@@ -7,10 +7,7 @@ import com.capstone.warranty_tracker.service.ServiceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -32,8 +29,33 @@ public class HomeownerController {
     }
 
     @PostMapping("/service-request")
-    public ResponseEntity<String> createServiceRequest(@RequestBody ServiceRequestDto dto, Principal principal) {
-        serviceRequestService.createRequest(dto, principal.getName());
-        return ResponseEntity.ok("Service request submitted.");
+    public ResponseEntity<?> createServiceRequest(@RequestBody ServiceRequestDto dto, Principal principal) {
+        return ResponseEntity.ok(serviceRequestService.createRequest(dto, principal.getName()));
+    }
+
+    @GetMapping("/service-requests")
+    public ResponseEntity<?> getAllServiceRequests(Principal principal) {
+        return ResponseEntity.ok(serviceRequestService.getHomeownerRequests(principal.getName()));
+    }
+
+    @GetMapping("/service-request/{id}")
+    public ResponseEntity<?> getServiceRequestById(@PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(serviceRequestService.getRequestById(id, principal.getName()));
+    }
+
+    @PutMapping("/service-request/{id}")
+    public ResponseEntity<?> updateServiceRequest(@PathVariable Long id, @RequestBody ServiceRequestDto dto, Principal principal) {
+        return ResponseEntity.ok(serviceRequestService.updateRequest(id, dto, principal.getName()));
+    }
+
+    @DeleteMapping("/service-request/{id}")
+    public ResponseEntity<?> cancelServiceRequest(@PathVariable Long id, Principal principal) {
+        serviceRequestService.cancelRequest(id, principal.getName());
+        return ResponseEntity.ok("Service request cancelled.");
+    }
+
+    @GetMapping("/appliances")
+    public ResponseEntity<?> getAllAppliances(Principal principal) {
+        return ResponseEntity.ok(applianceService.getHomeownerAppliances(principal.getName()));
     }
 }

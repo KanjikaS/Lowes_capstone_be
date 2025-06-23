@@ -21,6 +21,10 @@ public class Appliance {
 
     private String brand;
     private String modelNumber;
+
+    @Column(unique = true)
+    private String serialNumber;
+
     private LocalDate purchaseDate;
     private String invoiceUrl;
     private LocalDate warrantyExpiryDate;

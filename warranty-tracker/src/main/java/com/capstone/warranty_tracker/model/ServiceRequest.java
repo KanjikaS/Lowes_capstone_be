@@ -20,7 +20,6 @@ public class ServiceRequest {
 
     private String issueDescription;
     private LocalDateTime preferredSlot;
-    private LocalDateTime scheduledSlot;
 
     @Enumerated(EnumType.STRING)
     private ServiceStatus status;
