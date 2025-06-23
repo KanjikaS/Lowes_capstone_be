@@ -1,4 +1,3 @@
-
 package com.capstone.warranty_tracker.dto;
 
 import lombok.AllArgsConstructor;
@@ -18,5 +17,6 @@ public class ApplianceResponseDto {
     private LocalDate purchaseDate;
     private String invoiceUrl;
     private LocalDate warrantyExpiryDate;
-    private String homeownerName;  // Combined from first and last name
+    private String homeownerName; // Just the name, not the full object
 }
+
