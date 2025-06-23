@@ -21,11 +21,17 @@ public class Appliance {
 
     private String brand;
     private String modelNumber;
+
+    @Column(unique = true)
+    private String serialNumber;
+
     private LocalDate purchaseDate;
     private String invoiceUrl;
     private LocalDate warrantyExpiryDate;
 
-    @ManyToOne
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "homeowner_id", nullable = false) // ✅ Explicit mapping to correct column
     private Homeowner homeowner;
 
     @OneToMany(mappedBy = "appliance", cascade = CascadeType.ALL)

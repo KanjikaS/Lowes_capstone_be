@@ -23,6 +23,7 @@ public class ServiceRequest {
 
     private String issueDescription;
     private LocalDateTime preferredSlot;
+
     private LocalDateTime scheduledSlot;
     @Column(nullable = false)
     private String serviceType;

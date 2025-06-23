@@ -12,6 +12,7 @@ import java.util.List;
 @Repository
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, Long> {
     List<ServiceRequest> findByHomeowner_Id(Long homeownerId);
+    List<ServiceRequest> findByHomeowner_Email(String email);
     List<ServiceRequest> findByTechnician_Id(Long technicianId);
 
     boolean existsByTechnician_IdAndScheduledSlot(Long technicianId, LocalDateTime scheduledSlot);
