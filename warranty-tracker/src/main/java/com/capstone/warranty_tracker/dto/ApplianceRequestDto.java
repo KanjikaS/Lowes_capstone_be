@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public class ApplianceRequestDto {
     private String brand;
     private String modelNumber;
+    private String serialNumber;
     private LocalDate purchaseDate;
     private String invoiceUrl;
     private LocalDate warrantyExpiryDate;
