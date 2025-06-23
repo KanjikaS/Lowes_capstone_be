@@ -26,7 +26,7 @@ public class HomeownerController {
     @Autowired
     private ServiceRequestService serviceRequestService;
 
-    // without invoice
+    //  api without invoice
 //    @PostMapping("/appliance")
 //    public ResponseEntity<String> addAppliance(@RequestBody ApplianceRequestDto dto, Principal principal) {
 //        applianceService.addAppliance(dto, principal.getName());
