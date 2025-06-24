@@ -40,7 +40,10 @@ public class AdminController {
     public ResponseEntity<TechnicianAssignmentWrapper> assignTechnicians() {
         TechnicianAssignmentWrapper response = adminService.assignTechniciansToUnassignedRequests();
         return ResponseEntity.ok(response);
-
+    }
+    @GetMapping("/all-appliances")
+    public ResponseEntity<?>getAllAppliances(){
+        return ResponseEntity.ok(adminService.getAllAppliances());
     }
 }
 

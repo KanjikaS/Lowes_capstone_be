@@ -1,9 +1,11 @@
 package com.capstone.warranty_tracker.service;
 
+import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianAssignmentResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
 import com.capstone.warranty_tracker.model.ServiceRequest;
 import com.capstone.warranty_tracker.model.Technician;
+import com.capstone.warranty_tracker.repository.ApplianceRepository;
 import com.capstone.warranty_tracker.repository.ServiceRequestRepository;
 import com.capstone.warranty_tracker.repository.TechnicianRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -22,6 +25,9 @@ public class AdminService {
 
     @Autowired
     private ServiceRequestRepository serviceRequestRepository;
+
+    @Autowired
+    private ApplianceRepository applianceRepository;
 
     @Transactional
     public TechnicianAssignmentWrapper assignTechniciansToUnassignedRequests() {
@@ -74,5 +80,23 @@ public class AdminService {
                 .message(summaryMessage)
                 .assignments(assignmentLog)
                 .build();
+    }
+
+    public List<ApplianceResponseDto> getAllAppliances() {
+        return applianceRepository.findAll()
+                .stream()
+                .map(appliance -> new ApplianceResponseDto(
+                        appliance.getId(),
+                        appliance.getBrand(),
+                        appliance.getModelNumber(),
+                        appliance.getSerialNumber(),
+                        appliance.getPurchaseDate(),
+                        appliance.getInvoiceUrl(),
+                        appliance.getWarrantyExpiryDate(),
+                        appliance.getHomeowner() != null
+                                ? appliance.getHomeowner().getFirstName() + " " + appliance.getHomeowner().getLastName()
+                                : "N/A"
+                ))
+                .collect(Collectors.toList());
     }
 }
