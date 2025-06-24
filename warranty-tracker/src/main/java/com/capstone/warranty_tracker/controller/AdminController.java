@@ -1,5 +1,5 @@
 package com.capstone.warranty_tracker.controller;
-import com.capstone.warranty_tracker.dto.AssignTechnicianRequestDto;
+import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
 import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestDto;
 import com.capstone.warranty_tracker.service.AdminService;
@@ -36,4 +36,11 @@ public class AdminController {
     public ResponseEntity <?> getAvailableTechnicians(){
         return ResponseEntity.ok(technicianService.getAvailableTechnicians());
     }
+    @PostMapping("/assign-technicians")
+    public ResponseEntity<TechnicianAssignmentWrapper> assignTechnicians() {
+        TechnicianAssignmentWrapper response = adminService.assignTechniciansToUnassignedRequests();
+        return ResponseEntity.ok(response);
+
+    }
 }
+
