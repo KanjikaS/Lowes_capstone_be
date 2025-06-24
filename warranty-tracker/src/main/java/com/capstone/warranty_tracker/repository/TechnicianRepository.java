@@ -9,7 +9,6 @@ import java.util.List;
 
 @Repository
 public interface TechnicianRepository extends JpaRepository<Technician, Long> {
-
-    @Query("SELECT t FROM Technician t WHERE t.serviceRequests IS EMPTY")
+    @Query("SELECT t FROM Technician t WHERE t.assignedRequests IS EMPTY")
     List<Technician> findTechniciansWithNoServiceRequests();
 }
