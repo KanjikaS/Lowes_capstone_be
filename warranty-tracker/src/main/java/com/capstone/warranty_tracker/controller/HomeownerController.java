@@ -3,6 +3,7 @@ package com.capstone.warranty_tracker.controller;
 import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
 import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestDto;
+import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.service.ApplianceService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/homeowner")
@@ -110,4 +112,17 @@ public class HomeownerController {
         applianceService.deleteAppliance(id, principal.getName());
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/service-history/{id}")
+    public ResponseEntity<List<ServiceRequestResponseDto>> getServiceHistory(@PathVariable Long id) {
+        List<ServiceRequestResponseDto> history = serviceRequestService.getServiceHistory(id);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/service-history/user/{homeownerId}")
+    public ResponseEntity<List<ServiceRequestResponseDto>> getServiceHistoryByUser(@PathVariable Long homeownerId) {
+        List<ServiceRequestResponseDto> history = serviceRequestService.getServiceHistoryByUser(homeownerId);
+        return ResponseEntity.ok(history);
+    }
+
 }

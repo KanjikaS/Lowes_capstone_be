@@ -11,5 +11,9 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByHomeowner_Id(Long homeownerId);
     List<ServiceRequest> findByHomeowner_Email(String email);
     List<ServiceRequest> findByTechnician_Id(Long technicianId);
+
+    List<ServiceRequest> findByApplianceId(Long id);
+
+    List<ServiceRequest> findByHomeownerId(Long homeownerId);
 }
 

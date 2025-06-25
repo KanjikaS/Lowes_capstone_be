@@ -195,4 +195,19 @@ public class ServiceRequestService {
 
         return dto;
     }
+
+    public List<ServiceRequestResponseDto> getServiceHistory(Long id) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByApplianceId(id);
+        return requests.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ServiceRequestResponseDto> getServiceHistoryByUser(Long homeownerId) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByHomeownerId(homeownerId);
+        return requests.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
 }
