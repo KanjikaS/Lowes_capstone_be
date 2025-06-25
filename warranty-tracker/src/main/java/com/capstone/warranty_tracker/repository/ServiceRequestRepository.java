@@ -19,5 +19,8 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician IS NULL AND sr.status = com.capstone.warranty_tracker.model.ServiceStatus.REQUESTED")
     List<ServiceRequest> findUnassignedRequests();
 
+    @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician.email = :email")
+    List<ServiceRequest> findAssignedRequestsByTechnicianEmail(String email);
+
 }
 
