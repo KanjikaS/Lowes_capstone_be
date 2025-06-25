@@ -33,4 +33,5 @@ public class Appliance {
 
     @OneToMany(mappedBy = "appliance", cascade = CascadeType.ALL)
     private List<ServiceRequest> serviceRequests;
+
 }
