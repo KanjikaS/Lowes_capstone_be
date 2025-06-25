@@ -1,6 +1,8 @@
 package com.capstone.warranty_tracker.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,11 +26,6 @@ public class Technician extends User {
 
     @OneToMany(mappedBy = "technician", cascade = CascadeType.ALL)
     private List<ServiceRequest> assignedRequests;
-
-    @ManyToOne
-    @JoinColumn(name = "technician_id")
-    private Technician technician;
-
 
 
 }
