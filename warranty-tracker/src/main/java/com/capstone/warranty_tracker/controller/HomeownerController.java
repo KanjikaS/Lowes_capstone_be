@@ -113,7 +113,7 @@ public class HomeownerController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/service-history/{id}")
+    @GetMapping("/service-history/appliance/{id}")
     public ResponseEntity<List<ServiceRequestResponseDto>> getServiceHistory(@PathVariable Long id) {
         List<ServiceRequestResponseDto> history = serviceRequestService.getServiceHistory(id);
         return ResponseEntity.ok(history);
