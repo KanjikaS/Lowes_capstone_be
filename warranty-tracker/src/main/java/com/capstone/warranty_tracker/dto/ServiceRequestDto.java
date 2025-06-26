@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class ServiceRequestDto {
-    private Long applianceId;
+    private String serialNumber;
     private String issueDescription;
     private LocalDateTime preferredSlot;
 }

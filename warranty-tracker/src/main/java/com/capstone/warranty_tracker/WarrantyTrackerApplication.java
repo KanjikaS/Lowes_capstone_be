@@ -2,6 +2,7 @@ package com.capstone.warranty_tracker;
 
 import com.capstone.warranty_tracker.model.Admin;
 import com.capstone.warranty_tracker.model.Role;
+import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.model.User;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,22 @@ public class WarrantyTrackerApplication {
 			} else {
 				System.out.println("ℹ️ Admin user already exists.");
 			}
+
+			if (!userRepository.existsByEmail("tech@example.com")) {
+				Technician tech = new Technician();
+				tech.setUsername("TechUser");
+				tech.setEmail("tech@example.com");
+				tech.setPassword(passwordEncoder.encode("tech123"));
+				tech.setRole(Role.ROLE_TECHNICIAN);
+				tech.setFirstName("Tech");
+				tech.setLastName("One");
+				tech.setPhoneNumber("9876543210");
+				tech.setSpecialization("Electronics");
+				tech.setExperience(3);
+				userRepository.save(tech);
+				System.out.println("✅ Technician user created: tech1@example.com / tech123");
+			}
+
 		}
 	}
 	public static void main(String[] args) {
