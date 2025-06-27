@@ -66,6 +66,7 @@ public class ServiceRequestService {
     }
  //finding update
 
+
     public void updateStatus(Long id, ServiceStatus status, String techEmail) {
         ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
         if (sr.getTechnician() == null ||
