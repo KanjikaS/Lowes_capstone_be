@@ -1,80 +1,61 @@
 package com.capstone.warranty_tracker.service;
 
+import com.capstone.warranty_tracker.dto.AdminScheduleDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.model.Appliance;
-import com.capstone.warranty_tracker.model.Homeowner;
-import com.capstone.warranty_tracker.model.ServiceRequest;
-import com.capstone.warranty_tracker.model.ServiceStatus;
-import com.capstone.warranty_tracker.repository.ApplianceRepository;
-import com.capstone.warranty_tracker.repository.UserRepository;
-import com.capstone.warranty_tracker.repository.ServiceRequestRepository;
+import com.capstone.warranty_tracker.model.*;
+import org.springframework.security.access.AccessDeniedException;
+import com.capstone.warranty_tracker.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.AccessDeniedException;
-
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ServiceRequestService {
+    @Autowired private HomeownerRepository homeownerRepository;
+    @Autowired private ApplianceRepository applianceRepository;
+    @Autowired private TechnicianRepository technicianRepository;
+    @Autowired private ServiceRequestRepository serviceRequestRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ApplianceRepository applianceRepository;
-
-    @Autowired
-    private ServiceRequestRepository serviceRequestRepository;
 
     public ServiceRequestResponseDto createRequest(ServiceRequestDto dto, String email) throws AccessDeniedException {
-        try {
-            Homeowner homeowner = (Homeowner) userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Homeowner not found with email: " + email));
+        Homeowner homeowner = (Homeowner) userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Homeowner not found with email: " + email));
 
-
-            Appliance appliance = applianceRepository.findBySerialNumber(dto.getSerialNumber())
+        Appliance appliance;
+        if (dto.getSerialNumber() != null && !dto.getSerialNumber().isEmpty()) {
+            appliance = applianceRepository.findBySerialNumber(dto.getSerialNumber())
                     .orElseThrow(() -> new IllegalArgumentException("Appliance not found with serial number: " + dto.getSerialNumber()));
-
-            System.out.println("Found appliance: " + appliance.getBrand() + " " + appliance.getModelNumber());
-            System.out.println("Appliance ID: " + appliance.getId());
-            System.out.println("Appliance Serial Number: " + appliance.getSerialNumber());
-            System.out.println("Appliance Homeowner ID: " + appliance.getHomeowner().getId());
-            System.out.println("Appliance Homeowner Email: " + appliance.getHomeowner().getEmail());
-            System.out.println("Appliance Homeowner Name: " + appliance.getHomeowner().getFirstName() + " " + appliance.getHomeowner().getLastName());
-
-
-            // Verify that the appliance belongs to the homeowner using email
-            if (!appliance.getHomeowner().getEmail().equals(homeowner.getEmail())) {
-                throw new AccessDeniedException("You can only create service requests for your own appliances");
-            }
-
-            // Validate preferred time slot (should be in the future)
-            if (dto.getPreferredSlot().isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Preferred time slot must be in the future");
-            }
-
-            ServiceRequest serviceRequest = new ServiceRequest();
-            serviceRequest.setIssueDescription(dto.getIssueDescription());
-            serviceRequest.setPreferredSlot(dto.getPreferredSlot());
-            serviceRequest.setStatus(ServiceStatus.REQUESTED);
-            serviceRequest.setHomeowner(homeowner);
-            serviceRequest.setAppliance(appliance);
-            serviceRequest.setCreatedAt(LocalDateTime.now());
-
-            ServiceRequest savedRequest = serviceRequestRepository.save(serviceRequest);
-            System.out.println("Service request created successfully with ID: " + savedRequest.getId());
-            return convertToDto(savedRequest);
-
-        } catch (Exception e) {
-            System.err.println("Error creating service request: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
+        } else {
+            appliance = applianceRepository.findById(dto.getApplianceId())
+                    .orElseThrow(() -> new IllegalArgumentException("Appliance not found with id: " + dto.getApplianceId()));
         }
+
+        if (!appliance.getHomeowner().getEmail().equals(homeowner.getEmail())) {
+            throw new AccessDeniedException("You can only create service requests for your own appliances");
+        }
+
+        if (dto.getPreferredSlot().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Preferred time slot must be in the future");
+        }
+
+        ServiceRequest serviceRequest = new ServiceRequest();
+        serviceRequest.setIssueDescription(dto.getIssueDescription());
+        serviceRequest.setPreferredSlot(dto.getPreferredSlot());
+        serviceRequest.setStatus(ServiceStatus.REQUESTED);
+        serviceRequest.setHomeowner(homeowner);
+        serviceRequest.setAppliance(appliance);
+        serviceRequest.setCreatedAt(LocalDateTime.now());
+
+        return convertToDto(serviceRequestRepository.save(serviceRequest));
     }
 
     public List<ServiceRequestResponseDto> getHomeownerRequests(String email) {
@@ -94,7 +75,6 @@ public class ServiceRequestService {
         Homeowner homeowner = (Homeowner) userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Homeowner not found with email: " + email));
 
-        // Verify that the service request belongs to the homeowner using email
         if (!serviceRequest.getHomeowner().getEmail().equals(homeowner.getEmail())) {
             throw new AccessDeniedException("You can only view your own service requests");
         }
@@ -109,17 +89,14 @@ public class ServiceRequestService {
         Homeowner homeowner = (Homeowner) userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Homeowner not found with email: " + email));
 
-        // Verify that the service request belongs to the homeowner using email
         if (!serviceRequest.getHomeowner().getEmail().equals(homeowner.getEmail())) {
             throw new AccessDeniedException("You can only update your own service requests");
         }
 
-        // Only allow updates if the request is still in REQUESTED status
         if (serviceRequest.getStatus() != ServiceStatus.REQUESTED) {
             throw new IllegalStateException("Cannot update service request that is not in REQUESTED status");
         }
 
-        // Validate preferred time slot (should be in the future)
         if (dto.getPreferredSlot().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Preferred time slot must be in the future");
         }
@@ -127,8 +104,7 @@ public class ServiceRequestService {
         serviceRequest.setIssueDescription(dto.getIssueDescription());
         serviceRequest.setPreferredSlot(dto.getPreferredSlot());
 
-        ServiceRequest updatedRequest = serviceRequestRepository.save(serviceRequest);
-        return convertToDto(updatedRequest);
+        return convertToDto(serviceRequestRepository.save(serviceRequest));
     }
 
     public void cancelRequest(Long requestId, String email) {
@@ -138,12 +114,10 @@ public class ServiceRequestService {
         Homeowner homeowner = (Homeowner) userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Homeowner not found with email: " + email));
 
-        // Verify that the service request belongs to the homeowner using email
         if (!serviceRequest.getHomeowner().getEmail().equals(homeowner.getEmail())) {
             throw new AccessDeniedException("You can only cancel your own service requests");
         }
 
-        // Only allow cancellation if the request is still in REQUESTED status
         if (serviceRequest.getStatus() != ServiceStatus.REQUESTED) {
             throw new IllegalStateException("Cannot cancel service request that is not in REQUESTED status");
         }
@@ -151,6 +125,7 @@ public class ServiceRequestService {
         serviceRequest.setStatus(ServiceStatus.CANCELLED);
         serviceRequestRepository.save(serviceRequest);
     }
+
 
     public List<ServiceRequestResponseDto> getAllRequests() {
         return serviceRequestRepository.findAll()
@@ -167,12 +142,62 @@ public class ServiceRequestService {
             throw new IllegalStateException("Can only assign technician to requests in REQUESTED status");
         }
 
-        // Note: You would need to inject TechnicianRepository to get the technician
-        // For now, we'll just update the status to ASSIGNED
+        Technician technician = technicianRepository.findById(technicianId)
+                .orElseThrow(() -> new IllegalArgumentException("Technician not found"));
+
+        serviceRequest.setTechnician(technician);
         serviceRequest.setStatus(ServiceStatus.ASSIGNED);
-        ServiceRequest updatedRequest = serviceRequestRepository.save(serviceRequest);
-        return convertToDto(updatedRequest);
+
+        return convertToDto(serviceRequestRepository.save(serviceRequest));
     }
+
+
+    public void reschedule(Long id, LocalDateTime newSlot, String email) {
+        ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
+        if (!sr.getHomeowner().getEmail().equals(email)) throw new RuntimeException("Access denied");
+        if (sr.getTechnician() != null && slotTaken(sr.getTechnician().getId(), newSlot)) throw new RuntimeException("Technician already booked");
+        sr.setPreferredSlot(newSlot);
+        sr.setStatus(ServiceStatus.RESCHEDULED);
+    }
+
+    public void cancel(Long id, String email) {
+        ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
+        if (!sr.getHomeowner().getEmail().equals(email)) throw new RuntimeException("Access denied");
+        sr.setStatus(ServiceStatus.CANCELLED);
+    }
+
+    public void updateStatus(Long id, ServiceStatus status, String techEmail) {
+        ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
+        if (sr.getTechnician() == null || !sr.getTechnician().getEmail().equals(techEmail)) throw new RuntimeException("Only assigned technician can update");
+        sr.setStatus(status);
+    }
+
+    public List<LocalDateTime> availableSlots(Long technicianId, LocalDate day) {
+        LocalDateTime start = day.atTime(9, 0);
+        List<LocalDateTime> all = new ArrayList<>();
+        for (int h = 0; h < 9; h++) all.add(start.plusHours(h));
+        return all.stream().filter(s -> !slotTaken(technicianId, s)).collect(Collectors.toList());
+    }
+
+    private boolean slotTaken(Long techId, LocalDateTime slot) {
+        return serviceRequestRepository.slotTaken(techId, slot, slot.plusHours(1));
+    }
+
+
+    public void technicianUpdateStatus(Long id, ServiceStatus status, String techEmail) {
+        ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
+        if (sr.getTechnician() == null || !sr.getTechnician().getEmail().equals(techEmail)) throw new RuntimeException();
+        sr.setStatus(status);
+    }
+
+    public void technicianReschedule(Long id, LocalDateTime newSlot, String techEmail) {
+        ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
+        if (sr.getTechnician() == null || !sr.getTechnician().getEmail().equals(techEmail)) throw new RuntimeException();
+        if (slotTaken(sr.getTechnician().getId(), newSlot)) throw new RuntimeException("Slot already booked");
+        sr.setPreferredSlot(newSlot);
+        sr.setStatus(ServiceStatus.RESCHEDULED);
+    }
+
 
     private ServiceRequestResponseDto convertToDto(ServiceRequest serviceRequest) {
         ServiceRequestResponseDto dto = new ServiceRequestResponseDto();
@@ -182,12 +207,10 @@ public class ServiceRequestService {
         dto.setStatus(serviceRequest.getStatus());
         dto.setCreatedAt(serviceRequest.getCreatedAt());
 
-        // Set homeowner name
         if (serviceRequest.getHomeowner() != null) {
             dto.setHomeownerName(serviceRequest.getHomeowner().getFirstName() + " " + serviceRequest.getHomeowner().getLastName());
         }
 
-        // Set appliance info
         if (serviceRequest.getAppliance() != null) {
             Appliance appliance = serviceRequest.getAppliance();
             dto.setApplianceInfo(appliance.getBrand() + " " + appliance.getModelNumber() + " (SN: " + appliance.getSerialNumber() + ")");
@@ -196,3 +219,5 @@ public class ServiceRequestService {
         return dto;
     }
 }
+
+
