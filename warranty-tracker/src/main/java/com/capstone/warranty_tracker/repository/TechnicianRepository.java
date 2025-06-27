@@ -2,10 +2,6 @@ package com.capstone.warranty_tracker.repository;
 
 import com.capstone.warranty_tracker.model.Technician;
 import org.springframework.data.jpa.repository.JpaRepository;
-<<<<<<< appointment_management_updated
-
-public interface TechnicianRepository extends JpaRepository<Technician, Long> {
-=======
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -18,5 +14,4 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
     List<Technician> findTechniciansWithNoServiceRequests();
 
     Optional<Technician> findByEmail(String email);
->>>>>>> main
 }
