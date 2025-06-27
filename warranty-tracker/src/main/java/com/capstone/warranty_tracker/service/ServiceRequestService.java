@@ -64,7 +64,7 @@ public class ServiceRequestService {
             throw new RuntimeException("Access denied");
         sr.setStatus(ServiceStatus.CANCELLED);
     }
-
+ //finding update
 
     public void updateStatus(Long id, ServiceStatus status, String techEmail) {
         ServiceRequest sr = serviceRequestRepository.findById(id).orElseThrow();
