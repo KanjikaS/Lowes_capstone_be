@@ -88,6 +88,7 @@ public class AdminService {
                 .map(appliance -> new ApplianceResponseDto(
                         appliance.getId(),
                         appliance.getBrand(),
+                        appliance.getCategory(),
                         appliance.getModelNumber(),
                         appliance.getSerialNumber(),
                         appliance.getPurchaseDate(),
