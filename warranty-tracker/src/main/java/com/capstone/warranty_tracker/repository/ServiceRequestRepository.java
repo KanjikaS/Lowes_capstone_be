@@ -15,14 +15,13 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
 
     List<ServiceRequest> findByApplianceId(Long id);
 
-    List<ServiceRequest> findByHomeownerId(Long homeownerId);
+    List<ServiceRequest> findByHomeowner_Username(String username);
 
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician IS NULL AND sr.status = com.capstone.warranty_tracker.model.ServiceStatus.REQUESTED")
     List<ServiceRequest> findUnassignedRequests();
 
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician.email = :email ORDER BY sr.createdAt DESC")
     List<ServiceRequest> findAssignedRequestsByTechnicianEmail(String email);
-
 
 }
 

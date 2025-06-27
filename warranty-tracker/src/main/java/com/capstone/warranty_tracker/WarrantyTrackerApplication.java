@@ -3,7 +3,6 @@ package com.capstone.warranty_tracker;
 import com.capstone.warranty_tracker.model.Admin;
 import com.capstone.warranty_tracker.model.Role;
 import com.capstone.warranty_tracker.model.Technician;
-//import com.capstone.warranty_tracker.model.User;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -52,6 +51,8 @@ public class WarrantyTrackerApplication {
 				tech.setExperience(3);
 				userRepository.save(tech);
 				System.out.println("✅ Technician user created: tech1@example.com / tech123");
+			}else {
+				System.out.println("✅ Technician user already exists.");
 			}
 
 		}

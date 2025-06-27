@@ -1,15 +1,17 @@
 package com.capstone.warranty_tracker.controller;
 
-import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
-import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
-import com.capstone.warranty_tracker.dto.ServiceRequestDto;
-import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
+import com.capstone.warranty_tracker.dto.*;
+import com.capstone.warranty_tracker.model.User;
+import com.capstone.warranty_tracker.repository.UserRepository;
 import com.capstone.warranty_tracker.service.ApplianceService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +29,9 @@ public class HomeownerController {
 
     @Autowired
     private ServiceRequestService serviceRequestService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     //  api without invoice
 //    @PostMapping("/appliance")
@@ -113,15 +118,27 @@ public class HomeownerController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/service-history/appliance/{id}")
-    public ResponseEntity<List<ServiceRequestResponseDto>> getServiceHistory(@PathVariable Long id) {
-        List<ServiceRequestResponseDto> history = serviceRequestService.getServiceHistory(id);
+    @GetMapping("/service-history/appliance/{applianceId}")
+    public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryByAppliance(@PathVariable Long applianceId) {
+        List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByAppliance(applianceId);
         return ResponseEntity.ok(history);
     }
 
-    @GetMapping("/service-history/user/{homeownerId}")
-    public ResponseEntity<List<ServiceRequestResponseDto>> getServiceHistoryByUser(@PathVariable Long homeownerId) {
-        List<ServiceRequestResponseDto> history = serviceRequestService.getServiceHistoryByUser(homeownerId);
+    @GetMapping("/service-history/{username}")
+    public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryForLoggedInUser(
+            @PathVariable String username,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String emailFromJwt = userDetails.getUsername(); // this is the email from JWT
+
+        User loggedInUser = userRepository.findByEmail(emailFromJwt)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!loggedInUser.getUsername().equals(username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByUsername(username);
         return ResponseEntity.ok(history);
     }
 
