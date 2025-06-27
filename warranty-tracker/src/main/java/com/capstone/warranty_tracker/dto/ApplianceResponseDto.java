@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class ApplianceResponseDto {
     private Long id;
     private String brand;
+    private String category;
     private String modelNumber;
     private String serialNumber;
     private LocalDate purchaseDate;

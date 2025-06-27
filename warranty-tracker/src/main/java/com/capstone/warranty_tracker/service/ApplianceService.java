@@ -70,6 +70,7 @@ public class ApplianceService {
         ApplianceResponseDto dto = new ApplianceResponseDto();
         dto.setId(appliance.getId());
         dto.setBrand(appliance.getBrand());
+        dto.setCategory(appliance.getCategory());
         dto.setModelNumber(appliance.getModelNumber());
         dto.setSerialNumber(appliance.getSerialNumber());
         dto.setPurchaseDate(appliance.getPurchaseDate());
@@ -134,6 +135,7 @@ public class ApplianceService {
 
         // Update basic fields
         appliance.setBrand(dto.getBrand());
+        dto.setBrand(appliance.getCategory());
         appliance.setModelNumber(dto.getModelNumber());
         appliance.setSerialNumber(dto.getSerialNumber());
         appliance.setPurchaseDate(dto.getPurchaseDate());
@@ -191,6 +193,7 @@ public class ApplianceService {
 
         Appliance appliance = new Appliance();
         appliance.setBrand(dto.getBrand());
+        appliance.setCategory(dto.getCategory());
         appliance.setModelNumber(dto.getModelNumber());
         appliance.setSerialNumber(dto.getSerialNumber());
         appliance.setPurchaseDate(dto.getPurchaseDate());
