@@ -5,6 +5,7 @@ import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.model.Appliance;
 import com.capstone.warranty_tracker.model.Homeowner;
 import com.capstone.warranty_tracker.repository.ApplianceRepository;
+import com.capstone.warranty_tracker.repository.HomeownerRepository;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +22,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ApplianceService {
+
+    @Autowired
+    private HomeownerRepository homeownerRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -70,6 +74,7 @@ public class ApplianceService {
         ApplianceResponseDto dto = new ApplianceResponseDto();
         dto.setId(appliance.getId());
         dto.setBrand(appliance.getBrand());
+         dto.setCategory(appliance.getCategory());
         dto.setModelNumber(appliance.getModelNumber());
         dto.setSerialNumber(appliance.getSerialNumber());
         dto.setPurchaseDate(appliance.getPurchaseDate());
@@ -134,6 +139,7 @@ public class ApplianceService {
 
         // Update basic fields
         appliance.setBrand(dto.getBrand());
+         appliance.setCategory(dto.getCategory());
         appliance.setModelNumber(dto.getModelNumber());
         appliance.setSerialNumber(dto.getSerialNumber());
         appliance.setPurchaseDate(dto.getPurchaseDate());
@@ -191,6 +197,7 @@ public class ApplianceService {
 
         Appliance appliance = new Appliance();
         appliance.setBrand(dto.getBrand());
+         appliance.setCategory(dto.getCategory());
         appliance.setModelNumber(dto.getModelNumber());
         appliance.setSerialNumber(dto.getSerialNumber());
         appliance.setPurchaseDate(dto.getPurchaseDate());
