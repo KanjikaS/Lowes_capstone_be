@@ -1,9 +1,11 @@
 package com.capstone.warranty_tracker.service;
 
+import com.capstone.warranty_tracker.dto.AdminStatsDto;
 import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianAssignmentResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
 import com.capstone.warranty_tracker.model.ServiceRequest;
+import com.capstone.warranty_tracker.model.ServiceStatus;
 import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.repository.ApplianceRepository;
 import com.capstone.warranty_tracker.repository.ServiceRequestRepository;
@@ -98,5 +100,22 @@ public class AdminService {
                                 : "N/A"
                 ))
                 .collect(Collectors.toList());
+    }
+    public AdminStatsDto getStats(){
+        //count no of appliance from appliance repo and return number
+        //count no of service request where status is not equal to "COMPLETED"
+        //count no of technicians from technician repo
+        //count no of service reqyest where status is equal to "Completed"
+        long applianceCount = applianceRepository.count();
+        long technicianCount = technicianRepository.count();
+        long pendingRequests = serviceRequestRepository.countByStatusNot(ServiceStatus.COMPLETED);
+        long completedRequests = serviceRequestRepository.countByStatus(ServiceStatus.COMPLETED);
+        System.out.println(pendingRequests + "mewo");
+        return new AdminStatsDto(
+                (int) technicianCount,
+                (int) pendingRequests,
+                (int) applianceCount,
+                (int) completedRequests
+        );
     }
 }

@@ -10,11 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+ // Required if frontend is on different port
+
 
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
-
+@CrossOrigin(origins = "*")
 public class AdminController {
     @Autowired
     private TechnicianService technicianService;
@@ -25,7 +27,12 @@ public class AdminController {
     @Autowired
     private ApplianceService applianceService;
 
-    // 1. View all technicians (irrespective of availability)
+    @GetMapping("/stats")
+    public ResponseEntity<?> getStats(){
+        System.out.println("Yayyyyyyy");
+        return ResponseEntity.ok(adminService.getStats());
+    }
+
     @GetMapping("/all-technicians")
     public ResponseEntity<?> getAllTechnicians() {
         return ResponseEntity.ok(technicianService.getAllTechnicians());

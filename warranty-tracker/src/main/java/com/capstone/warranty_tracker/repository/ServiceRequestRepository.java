@@ -1,6 +1,7 @@
 package com.capstone.warranty_tracker.repository;
 
 import com.capstone.warranty_tracker.model.ServiceRequest;
+import com.capstone.warranty_tracker.model.ServiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,5 +15,8 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByTechnician_Id(Long technicianId);
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician IS NULL AND sr.status = com.capstone.warranty_tracker.model.ServiceStatus.REQUESTED")
     List<ServiceRequest> findUnassignedRequests();
+    long countByStatusNot(ServiceStatus status);     // For pending (non-completed)
+
+    long countByStatus(ServiceStatus status);
 }
 
