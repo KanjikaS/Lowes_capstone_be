@@ -5,7 +5,6 @@ import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.model.Appliance;
 import com.capstone.warranty_tracker.model.Homeowner;
 import com.capstone.warranty_tracker.repository.ApplianceRepository;
-import com.capstone.warranty_tracker.repository.HomeownerRepository;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,9 +21,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class ApplianceService {
-
-    @Autowired
-    private HomeownerRepository homeownerRepository;
 
     @Autowired
     private UserRepository userRepository;
