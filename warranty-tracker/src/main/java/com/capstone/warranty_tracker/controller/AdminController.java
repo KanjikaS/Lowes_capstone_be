@@ -46,11 +46,12 @@ public class AdminController {
     public ResponseEntity <?> getAvailableTechnicians(){
         return ResponseEntity.ok(technicianService.getAvailableTechnicians());
     }
-    @PostMapping("/assign-technicians")
-    public ResponseEntity<TechnicianAssignmentWrapper> assignTechnicians() {
-        TechnicianAssignmentWrapper response = adminService.assignTechniciansToUnassignedRequests();
-        return ResponseEntity.ok(response);
+    
+    @GetMapping("/all-service-requests")
+    public ResponseEntity<?> getAllServiceRequests(){
+        return ResponseEntity.ok(ResponseEntity.ok(adminService.getAllServiceRequests()));
     }
+
     @GetMapping("/all-appliances")
     public ResponseEntity<?>getAllAppliances(){
         return ResponseEntity.ok(adminService.getAllAppliances());
