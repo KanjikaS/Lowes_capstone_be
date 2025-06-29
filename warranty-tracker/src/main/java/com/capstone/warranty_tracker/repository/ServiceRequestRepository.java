@@ -22,6 +22,8 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician.email = :email ORDER BY sr.createdAt DESC")
     List<ServiceRequest> findAssignedRequestsByTechnicianEmail(String email);
 
+    List<ServiceRequest> findTop5ByOrderByCreatedAtDesc();
+
 
 }
 

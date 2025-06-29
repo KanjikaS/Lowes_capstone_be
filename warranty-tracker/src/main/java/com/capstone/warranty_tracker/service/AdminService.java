@@ -1,8 +1,6 @@
 package com.capstone.warranty_tracker.service;
 
-import com.capstone.warranty_tracker.dto.AdminStatsDto;
-import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianAssignmentResponseDto;
+import com.capstone.warranty_tracker.dto.*;
 import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
 import com.capstone.warranty_tracker.model.ServiceRequest;
 import com.capstone.warranty_tracker.model.ServiceStatus;
@@ -118,5 +116,21 @@ public class AdminService {
                 (int) applianceCount,
                 (int) completedRequests
         );
+    }
+    public List<ServiceRequestAdminDto> getRecentServiceRequest() {
+        return serviceRequestRepository.findTop5ByOrderByCreatedAtDesc()
+                .stream()
+                .map(sr -> new ServiceRequestAdminDto(
+                        sr.getId(),
+                        sr.getAppliance().getBrand() + " " + sr.getAppliance().getModelNumber(),
+                        sr.getAppliance().getSerialNumber(),
+                        sr.getHomeowner().getFirstName() + " " + sr.getHomeowner().getLastName(),
+                        sr.getTechnician() != null
+                                ? sr.getTechnician().getFirstName() + " " + sr.getTechnician().getLastName()
+                                : "-",
+                        sr.getStatus().name(),
+                        sr.getCreatedAt()
+                ))
+                .toList();
     }
 }

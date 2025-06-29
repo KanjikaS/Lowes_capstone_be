@@ -29,15 +29,18 @@ public class AdminController {
 
     @GetMapping("/stats")
     public ResponseEntity<?> getStats(){
-        System.out.println("Yayyyyyyy");
         return ResponseEntity.ok(adminService.getStats());
+    }
+
+    @GetMapping("/recent-service-requests")
+    public ResponseEntity<?> getRecentServiceRequests(){
+        return ResponseEntity.ok(ResponseEntity.ok(adminService.getRecentServiceRequest()));
     }
 
     @GetMapping("/all-technicians")
     public ResponseEntity<?> getAllTechnicians() {
         return ResponseEntity.ok(technicianService.getAllTechnicians());
     }
-
 
   @GetMapping("/available-technicians")
     public ResponseEntity <?> getAvailableTechnicians(){
