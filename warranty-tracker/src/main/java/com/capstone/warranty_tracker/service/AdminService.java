@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,5 +98,40 @@ public class AdminService {
                 ))
                 .toList();
     }
+    @Transactional
+    public boolean assignTechnicianToRequest(Long technicianId, Long requestId) {
+        Optional<Technician> techOpt = technicianRepository.findById(technicianId);
+        Optional<ServiceRequest> reqOpt = serviceRequestRepository.findById(requestId);
+
+
+
+
+        if (techOpt.isEmpty() || reqOpt.isEmpty()) return false;
+
+        Technician technician = techOpt.get();
+        ServiceRequest request = reqOpt.get();
+        System.out.println("hahahah");
+        System.out.println(technician);
+        System.out.println(request);
+
+
+
+        // Check if already assigned
+        if (request.getTechnician() != null) return false;
+
+        // Assign technician
+        request.setTechnician(technician);
+        technician.getAssignedRequests().add(request);
+
+        //  Change status to IN_PROGRESS
+        request.setStatus(ServiceStatus.IN_PROGRESS);
+
+        //  Save both entities
+        serviceRequestRepository.save(request);
+        technicianRepository.save(technician);
+
+        return true;
+    }
+
 
 }
