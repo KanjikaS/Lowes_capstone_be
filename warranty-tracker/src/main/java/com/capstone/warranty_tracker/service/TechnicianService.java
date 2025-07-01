@@ -1,6 +1,7 @@
 package com.capstone.warranty_tracker.service;
 
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
+import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
 import com.capstone.warranty_tracker.dto.UpdateRequestStatusDto;
 import com.capstone.warranty_tracker.model.ServiceRequest;
 import com.capstone.warranty_tracker.model.ServiceStatus;
@@ -149,6 +150,23 @@ public class TechnicianService {
                 .build();
     }
 
+    public TechnicianStatsDto getTechnicianStats(String email) {
+        List<ServiceRequest> requests = serviceRequestRepository.findAssignedRequestsByTechnicianEmail(email);
+
+        long assignedCount = requests.stream().filter(r -> r.getStatus() == ServiceStatus.ASSIGNED).count();
+        long inProgressCount = requests.stream().filter(r -> r.getStatus() == ServiceStatus.IN_PROGRESS).count();
+        long completedCount = requests.stream().filter(r -> r.getStatus() == ServiceStatus.COMPLETED).count();
+
+        return TechnicianStatsDto.builder()
+                .assignedCount(assignedCount)
+                .inProgressCount(inProgressCount)
+                .completedCount(completedCount)
+                .build();
+    }
+
+
+
+
     public  List<ServiceRequestResponseDto> getAssignedRequestsForTechnicianByID(Long technicianId){
         List<ServiceRequest> requests = serviceRequestRepository.findByTechnician_Id(technicianId);
 
@@ -169,6 +187,7 @@ public class TechnicianService {
         }).collect(Collectors.toList());
 
     }
+
 
 
 
