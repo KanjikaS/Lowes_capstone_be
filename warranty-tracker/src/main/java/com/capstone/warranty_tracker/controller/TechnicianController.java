@@ -2,6 +2,7 @@ package com.capstone.warranty_tracker.controller;
 
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
+import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
 import com.capstone.warranty_tracker.service.TechnicianService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -71,6 +72,15 @@ public class TechnicianController {
         TechnicianResponseDto profile = technicianService.getTechnicianProfile(email);
         return ResponseEntity.ok(profile);
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<TechnicianStatsDto> getTechnicianStats(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        TechnicianStatsDto stats = technicianService.getTechnicianStats(email);
+        return ResponseEntity.ok(stats);
+    }
+
+
 
 
 
