@@ -1,9 +1,9 @@
 package com.capstone.warranty_tracker.controller;
-
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
 import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.repository.TechnicianRepository;
+import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
 import com.capstone.warranty_tracker.service.TechnicianService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.capstone.warranty_tracker.dto.UpdateRequestStatusDto;
 import com.capstone.warranty_tracker.security.JwtUtil;
 import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
-
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/technician")
@@ -79,6 +79,7 @@ public class TechnicianController {
         return ResponseEntity.ok(profile);
     }
 
+
     @GetMapping("/service-history/{technicianId}")
     public ResponseEntity<List<ServiceHistoryDto>> getServiceHistory(
             @PathVariable Long technicianId,
@@ -93,6 +94,14 @@ public class TechnicianController {
         if (!loggedInTechnician.getId().equals(technicianId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // or a custom message
         }
+
+    @GetMapping("/stats")
+    public ResponseEntity<TechnicianStatsDto> getTechnicianStats(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        TechnicianStatsDto stats = technicianService.getTechnicianStats(email);
+        return ResponseEntity.ok(stats);
+    }
+
 
         List<ServiceHistoryDto> history = technicianService.getServiceHistoryByTechnician_Id(technicianId);
         return ResponseEntity.ok(history);

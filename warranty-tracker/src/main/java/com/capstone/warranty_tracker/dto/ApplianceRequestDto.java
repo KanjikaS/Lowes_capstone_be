@@ -23,6 +23,7 @@ import java.time.LocalDate;
 @Data
 public class ApplianceRequestDto {
     private String brand;
+    private String category;
     private String modelNumber;
     private String serialNumber;
 
