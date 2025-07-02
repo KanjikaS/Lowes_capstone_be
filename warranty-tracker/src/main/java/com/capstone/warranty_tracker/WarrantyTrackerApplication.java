@@ -3,16 +3,17 @@ package com.capstone.warranty_tracker;
 import com.capstone.warranty_tracker.model.Admin;
 import com.capstone.warranty_tracker.model.Role;
 import com.capstone.warranty_tracker.model.Technician;
-import com.capstone.warranty_tracker.model.User;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @SpringBootApplication
+@EnableScheduling
 public class WarrantyTrackerApplication {
 	@Component
 	public class DataSeeder implements CommandLineRunner {
