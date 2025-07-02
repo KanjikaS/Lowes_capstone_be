@@ -1,8 +1,5 @@
 package com.capstone.warranty_tracker.controller;
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
-import com.capstone.warranty_tracker.dto.ServiceRequestDto;
 import com.capstone.warranty_tracker.service.AdminService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import com.capstone.warranty_tracker.service.TechnicianService;
@@ -11,12 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-// Required if frontend is on different port
+
 
 
 @RestController
