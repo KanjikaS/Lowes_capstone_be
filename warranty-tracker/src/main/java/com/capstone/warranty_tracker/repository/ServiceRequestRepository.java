@@ -14,6 +14,11 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByHomeowner_Id(Long homeownerId);
     List<ServiceRequest> findByHomeowner_Email(String email);
     List<ServiceRequest> findByTechnician_Id(Long technicianId);
+
+    List<ServiceRequest> findByApplianceId(Long id);
+
+    List<ServiceRequest> findByHomeowner_Username(String username);
+
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician IS NULL AND sr.status = com.capstone.warranty_tracker.model.ServiceStatus.REQUESTED")
     List<ServiceRequest> findUnassignedRequests();
     long countByStatusNot(ServiceStatus status);     // For pending (non-completed)
@@ -33,8 +38,6 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
 
 
     List<ServiceRequest> findTop5ByOrderByCreatedAtDesc();
-
-
 
 }
 

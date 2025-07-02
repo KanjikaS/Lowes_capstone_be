@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import java.util.List;
+import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
 
 @Service
 public class TechnicianService {
@@ -22,6 +23,9 @@ public class TechnicianService {
 
     @Autowired
     private ServiceRequestRepository serviceRequestRepository;
+
+    @Autowired
+    private ServiceRequestService serviceRequestService;
 
     public List<TechnicianResponseDto> getAllTechnicians() {
         return technicianRepository.findAll().stream()
@@ -150,6 +154,10 @@ public class TechnicianService {
                 .build();
     }
 
+    public List<ServiceHistoryDto> getServiceHistoryByTechnician_Id(Long technicianId) {
+        return serviceRequestService.getServiceHistoryByTechnician_Id(technicianId);
+    }
+
     public TechnicianStatsDto getTechnicianStats(String email) {
         List<ServiceRequest> requests = serviceRequestRepository.findAssignedRequestsByTechnicianEmail(email);
 
@@ -187,6 +195,7 @@ public class TechnicianService {
         }).collect(Collectors.toList());
 
     }
+
 
 
 

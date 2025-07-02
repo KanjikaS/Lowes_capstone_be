@@ -1,5 +1,6 @@
 package com.capstone.warranty_tracker.service;
 
+import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.dto.AdminScheduleDto;
@@ -271,4 +272,52 @@ public class ServiceRequestService {
 
         return dto;
     }
+
+    private ServiceHistoryDto convertToServiceHistoryDto(ServiceRequest serviceRequest) {
+        ServiceHistoryDto dto = new ServiceHistoryDto();
+        dto.setId(serviceRequest.getId());
+        dto.setIssueDescription(serviceRequest.getIssueDescription());
+
+        // Use preferredSlot or actual completed date if available
+        dto.setServiceDate(serviceRequest.getPreferredSlot());
+
+        dto.setStatus(serviceRequest.getStatus());
+
+        // Set homeowner name
+        if (serviceRequest.getHomeowner() != null) {
+            dto.setHomeownerName(serviceRequest.getHomeowner().getFirstName() + " " + serviceRequest.getHomeowner().getLastName());
+        }
+
+        // Set appliance info
+        if (serviceRequest.getAppliance() != null) {
+            Appliance appliance = serviceRequest.getAppliance();
+            dto.setApplianceInfo(appliance.getBrand() + " " + appliance.getModelNumber() + " (SN: " + appliance.getSerialNumber() + ")");
+        }
+
+        return dto;
+    }
+
+
+    public List<ServiceHistoryDto> getServiceHistoryByAppliance(Long applianceId) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByApplianceId(applianceId);
+        return requests.stream()
+                .map(this::convertToServiceHistoryDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ServiceHistoryDto> getServiceHistoryByUsername(String username) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByHomeowner_Username(username);
+        return requests.stream()
+            .map(this::convertToServiceHistoryDto)
+            .collect(Collectors.toList());
+    }
+
+    public List<ServiceHistoryDto> getServiceHistoryByTechnician_Id(Long technicianId) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByTechnician_Id(technicianId);
+        return requests.stream()
+                .map(this::convertToServiceHistoryDto)
+                .collect(Collectors.toList());
+    }
+
+
 }
