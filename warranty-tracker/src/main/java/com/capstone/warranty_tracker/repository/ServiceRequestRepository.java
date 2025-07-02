@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -13,6 +14,11 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByHomeowner_Id(Long homeownerId);
     List<ServiceRequest> findByHomeowner_Email(String email);
     List<ServiceRequest> findByTechnician_Id(Long technicianId);
+
+    List<ServiceRequest> findByApplianceId(Long id);
+
+    List<ServiceRequest> findByHomeowner_Username(String username);
+
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician IS NULL AND sr.status = com.capstone.warranty_tracker.model.ServiceStatus.REQUESTED")
     List<ServiceRequest> findUnassignedRequests();
     long countByStatusNot(ServiceStatus status);     // For pending (non-completed)
@@ -22,8 +28,16 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     @Query("SELECT sr FROM ServiceRequest sr WHERE sr.technician.email = :email ORDER BY sr.createdAt DESC")
     List<ServiceRequest> findAssignedRequestsByTechnicianEmail(String email);
 
-    List<ServiceRequest> findTop5ByOrderByCreatedAtDesc();
+    @Query("""
+    select count(sr) > 0 from ServiceRequest sr
+    where sr.technician.id = :techId
+    and sr.preferredSlot < :end
+    and sr.preferredSlot > :start
+    """)
+    boolean slotTaken(Long techId, LocalDateTime start, LocalDateTime end);
 
+
+    List<ServiceRequest> findTop5ByOrderByCreatedAtDesc();
 
 }
 

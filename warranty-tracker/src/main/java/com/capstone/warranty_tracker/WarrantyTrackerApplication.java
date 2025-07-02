@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 public class WarrantyTrackerApplication {
 	@Component
 	public class DataSeeder implements CommandLineRunner {
-
 		@Autowired
 		private UserRepository userRepository;
 
@@ -54,6 +53,8 @@ public class WarrantyTrackerApplication {
 				tech.setExperience(3);
 				userRepository.save(tech);
 				System.out.println("✅ Technician user created: tech1@example.com / tech123");
+			}else {
+				System.out.println("✅ Technician user already exists.");
 			}
 
 		}

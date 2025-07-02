@@ -1,7 +1,7 @@
 package com.capstone.warranty_tracker.controller;
-//import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
-import com.capstone.warranty_tracker.dto.ServiceRequestDto;
+//import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
+import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
+import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
 import com.capstone.warranty_tracker.service.AdminService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import com.capstone.warranty_tracker.service.TechnicianService;
@@ -10,8 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
- // Required if frontend is on different port
+
+import java.util.List;
+
 
 
 @RestController
@@ -43,7 +47,9 @@ public class AdminController {
         return ResponseEntity.ok(technicianService.getAllTechnicians());
     }
 
+
   @GetMapping("/available-technicians")
+
     public ResponseEntity <?> getAvailableTechnicians(){
         return ResponseEntity.ok(technicianService.getAvailableTechnicians());
     }
@@ -70,6 +76,42 @@ public class AdminController {
     @GetMapping("/all-appliances")
     public ResponseEntity<?>getAllAppliances(){
         return ResponseEntity.ok(adminService.getAllAppliances());
+    }
+
+    @GetMapping("/service-history/appliance/{applianceId}")
+    public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryByAppliance(@PathVariable Long applianceId) {
+        List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByAppliance(applianceId);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/service-history/technician/{technicianId}")
+    public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryByTechnician_Id(@PathVariable Long technicianId) {
+        List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByTechnician_Id(technicianId);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/service-history/homeowner/{username}")
+    public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryByHomeowner(@PathVariable String username) {
+        List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByUsername(username);
+        return ResponseEntity.ok(history);
+
+    @GetMapping("/technician-assigned-requests")
+    public ResponseEntity<List<ServiceRequestResponseDto>> getAssignedRequests(@RequestParam Long technicianId ) {
+        return ResponseEntity.ok(technicianService.getAssignedRequestsForTechnicianByID(technicianId));
+    }
+
+    @GetMapping("/technician/in-progress")
+    public ResponseEntity<List<ServiceRequestResponseDto>> getInProgressRequests(@RequestParam String technicianEmail){
+        // Call service method
+        List<ServiceRequestResponseDto> requests = technicianService.getInProgressRequestsForTechnician(technicianEmail);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/technician/completed")
+    public ResponseEntity<List<ServiceRequestResponseDto>> getCompletedRequests(@RequestParam String technicianEmail) {
+        List<ServiceRequestResponseDto> completed = technicianService.getCompletedRequestsForTechnician(technicianEmail);
+        return ResponseEntity.ok(completed);
+
     }
 }
 
