@@ -53,12 +53,12 @@ public class AdminService {
         //count no of appliance from appliance repo and return number
         //count no of service request where status is not equal to "COMPLETED"
         //count no of technicians from technician repo
-        //count no of service reqyest where status is equal to "Completed"
+        //count no of service request where status is equal to "Completed"
         long applianceCount = applianceRepository.count();
         long technicianCount = technicianRepository.count();
         long pendingRequests = serviceRequestRepository.countByStatusNot(ServiceStatus.COMPLETED);
         long completedRequests = serviceRequestRepository.countByStatus(ServiceStatus.COMPLETED);
-        System.out.println(pendingRequests + "mewo");
+        System.out.println(pendingRequests);
         return new AdminStatsDto(
                 (int) technicianCount,
                 (int) pendingRequests,
