@@ -1,4 +1,4 @@
-package com.capstone.warranty_tracker.repository;
+package com.capstone.warranty_tracker.Repository;
 
 import com.capstone.warranty_tracker.WarrantyTrackerApplication;
 import com.capstone.warranty_tracker.model.Appliance;
