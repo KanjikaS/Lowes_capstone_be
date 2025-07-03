@@ -1,8 +1,7 @@
 package com.capstone.warranty_tracker.controller;
 
-import com.capstone.warranty_tracker.dto.AdminStatsDto;
-import com.capstone.warranty_tracker.dto.ServiceRequestAdminDto;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
+import com.capstone.warranty_tracker.dto.*;
+import com.capstone.warranty_tracker.model.ServiceStatus;
 import com.capstone.warranty_tracker.service.AdminService;
 import com.capstone.warranty_tracker.service.TechnicianService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,6 +32,9 @@ public class AdminControllerTest {
 
     @Mock
     private TechnicianService technicianService;
+
+    @Mock
+    private ApplianceResponseDto applianceResponseDto;
 
     @BeforeEach
     public void setup() {
@@ -121,6 +124,101 @@ public class AdminControllerTest {
 
         verify(technicianService, times(1)).getAllTechnicians();
     }
+    @Test
+    void shouldReturnListOfAvailableTechnicians() throws Exception {
+        TechnicianResponseDto dto = TechnicianResponseDto.builder()
+                .id(1001L)
+                .firstName("Alyssa")
+                .lastName("Turner")
+                .email("alyssa.tools@example.com")
+                .phoneNumber("9876543212")
+                .specialization("Electrical Repair")
+                .experience(5)
+                .build();
+
+        when(technicianService.getAvailableTechnicians()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/admin/available-technicians"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1001))
+                .andExpect(jsonPath("$[0].firstName").value("Alyssa"))
+                .andExpect(jsonPath("$[0].lastName").value("Turner"))
+                .andExpect(jsonPath("$[0].email").value("alyssa.tools@example.com"))
+                .andExpect(jsonPath("$[0].phoneNumber").value("9876543212"))
+                .andExpect(jsonPath("$[0].specialization").value("Electrical Repair"))
+                .andExpect(jsonPath("$[0].experience").value(5));
+
+        verify(technicianService, times(1)).getAvailableTechnicians();
+    }
+    @Test
+    void shouldReturnAllServiceRequests() throws Exception {
+        ServiceRequestAdminDto dto = new ServiceRequestAdminDto(
+                123L,
+                "Samsung SM-R889",
+                "101",
+                "Kanjika Singh",
+                "Ravi Sharma",
+                "IN_PROGRESS",
+                LocalDateTime.of(2025, 7, 1, 10, 0)
+        );
+
+        when(adminService.getAllServiceRequests()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/admin/all-service-requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.body.length()").value(1))
+                .andExpect(jsonPath("$.body[0].id").value(123))
+                .andExpect(jsonPath("$.body[0].applianceName").value("Samsung SM-R889"))
+                .andExpect(jsonPath("$.body[0].serialNumber").value("101"))
+                .andExpect(jsonPath("$.body[0].homeownerName").value("Kanjika Singh"))
+                .andExpect(jsonPath("$.body[0].technicianName").value("Ravi Sharma"))
+                .andExpect(jsonPath("$.body[0].status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.body[0].createdAt[0]").value(2025))
+                .andExpect(jsonPath("$.body[0].createdAt[1]").value(7))
+                .andExpect(jsonPath("$.body[0].createdAt[2]").value(1))
+                .andExpect(jsonPath("$.body[0].createdAt[3]").value(10))
+                .andExpect(jsonPath("$.body[0].createdAt[4]").value(0));
+
+        verify(adminService, times(1)).getAllServiceRequests();
+    }
+    
+    @Test
+    void shouldReturnAllAppliances() throws Exception {
+        ApplianceResponseDto dto = new ApplianceResponseDto(
+                101L,
+                "LG",
+                "Refrigerator",
+                "LG-X123",
+                "SN123456",
+                LocalDate.of(2024, 1, 10),
+                "http://example.com/invoice.pdf",
+                LocalDate.of(2026, 1, 10),
+                "Kanjika Singh"
+        );
+
+        when(adminService.getAllAppliances()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/admin/all-appliances"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(101))
+                .andExpect(jsonPath("$[0].brand").value("LG"))
+                .andExpect(jsonPath("$[0].category").value("Refrigerator"))
+                .andExpect(jsonPath("$[0].modelNumber").value("LG-X123"))
+                .andExpect(jsonPath("$[0].serialNumber").value("SN123456"))
+                .andExpect(jsonPath("$[0].purchaseDate[0]").value(2024))
+                .andExpect(jsonPath("$[0].purchaseDate[1]").value(1))
+                .andExpect(jsonPath("$[0].purchaseDate[2]").value(10))
+                .andExpect(jsonPath("$[0].invoiceUrl").value("http://example.com/invoice.pdf"))
+                .andExpect(jsonPath("$[0].warrantyExpiryDate[0]").value(2026))
+                .andExpect(jsonPath("$[0].warrantyExpiryDate[1]").value(1))
+                .andExpect(jsonPath("$[0].warrantyExpiryDate[2]").value(10))
+                .andExpect(jsonPath("$[0].homeownerName").value("Kanjika Singh"));
+
+        verify(adminService, times(1)).getAllAppliances();
+    }
+
 }
 
 

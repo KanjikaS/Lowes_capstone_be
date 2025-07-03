@@ -54,4 +54,36 @@ class TechnicianServiceTest {
         // Verify interaction
         verify(technicianRepository, times(1)).findAll();
     }
+
+    @Test
+    void shouldReturnAvailableTechniciansMappedToDto() {
+        // Arrange
+        Technician tech = new Technician();
+        tech.setId(10L);
+        tech.setFirstName("Alyssa");
+        tech.setLastName("Turner");
+        tech.setEmail("alyssa.tools@example.com");
+        tech.setPhoneNumber("9876543212");
+        tech.setSpecialization("Electrical Repair");
+        tech.setExperience(5);
+
+        when(technicianRepository.findTechniciansWithNoServiceRequests()).thenReturn(List.of(tech));
+
+        // Act
+        List<TechnicianResponseDto> result = technicianService.getAvailableTechnicians();
+
+        // Assert
+        assertEquals(1, result.size());
+        TechnicianResponseDto dto = result.get(0);
+        assertEquals(10L, dto.getId());
+        assertEquals("Alyssa", dto.getFirstName());
+        assertEquals("Turner", dto.getLastName());
+        assertEquals("alyssa.tools@example.com", dto.getEmail());
+        assertEquals("9876543212", dto.getPhoneNumber());
+        assertEquals("Electrical Repair", dto.getSpecialization());
+        assertEquals(5, dto.getExperience());
+
+        verify(technicianRepository, times(1)).findTechniciansWithNoServiceRequests();
+    }
+
 }
