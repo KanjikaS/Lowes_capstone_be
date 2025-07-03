@@ -1,4 +1,4 @@
-package com.capstone.warranty_tracker.Service;
+package com.capstone.warranty_tracker.service;
 
 import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
 import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
