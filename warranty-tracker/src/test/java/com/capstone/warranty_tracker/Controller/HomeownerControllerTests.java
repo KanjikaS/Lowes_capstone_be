@@ -1,4 +1,4 @@
-package com.capstone.warranty_tracker.controller;
+package com.capstone.warranty_tracker.Controller;
 
 import com.capstone.warranty_tracker.controller.HomeownerController;
 import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
