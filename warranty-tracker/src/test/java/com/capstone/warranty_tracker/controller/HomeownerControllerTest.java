@@ -1,5 +1,6 @@
 package com.capstone.warranty_tracker.controller;
 
+import com.capstone.warranty_tracker.controller.HomeownerController;
 import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
 import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
 import com.capstone.warranty_tracker.security.JwtUtil;
@@ -22,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -47,15 +50,14 @@ class HomeownerControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void testAddAppliance_WithInvoice_Returns200() throws Exception {
+    void testAddAppliance_WithInvoice_ReturnsSuccessMessage() throws Exception {
         String email = "test@example.com";
-        String serialNumber = "SN123456";
 
         ApplianceRequestDto request = new ApplianceRequestDto();
         request.setBrand("Samsung");
         request.setCategory("Washer");
         request.setModelNumber("WM123");
-        request.setSerialNumber(serialNumber);
+        request.setSerialNumber("SN123456");
         request.setPurchaseDate(LocalDate.of(2023, 1, 1));
         request.setWarrantyExpiryDate(LocalDate.of(2026, 1, 1));
 
@@ -67,8 +69,8 @@ class HomeownerControllerTest {
         MockMultipartFile invoicePart = new MockMultipartFile(
                 "invoice", "invoice.pdf", "application/pdf", "Dummy PDF Content".getBytes());
 
-        doNothing().when(applianceService)
-                .addApplianceWithInvoice(any(ApplianceRequestDto.class), any(MultipartFile.class), eq(email));
+        // ✅ Since method is void
+        doNothing().when(applianceService).addApplianceWithInvoice(any(ApplianceRequestDto.class), any(MultipartFile.class), eq(email));
 
         mockMvc.perform(multipart("/homeowner/appliance")
                         .file(appliancePart)
@@ -92,7 +94,7 @@ class HomeownerControllerTest {
 
     @Test
     @WithMockUser(username = "homeowner@example.com", roles = "HOMEOWNER")
-    void testUpdateAppliance_WithInvoice() throws Exception {
+    void testUpdateAppliance_WithInvoice_ReturnsSuccessMessage() throws Exception {
         Long applianceId = 1L;
         String email = "homeowner@example.com";
 
@@ -112,20 +114,14 @@ class HomeownerControllerTest {
         MockMultipartFile invoicePart = new MockMultipartFile(
                 "invoice", "invoice.pdf", "application/pdf", "dummy pdf".getBytes());
 
-        ApplianceResponseDto responseDto = new ApplianceResponseDto();
-        responseDto.setId(applianceId);
-        responseDto.setBrand("LG");
-        responseDto.setSerialNumber("SN999");
-
-        // ✅ FIX: use when(...).thenReturn(...) because method returns a value
-        when(applianceService.updateApplianceWithInvoice(
-                eq(applianceId), any(ApplianceRequestDto.class), any(MultipartFile.class), eq(email)))
-                .thenReturn(responseDto);
+        // ✅ FIXED: Proper stubbing since the method returns a DTO
+        when(applianceService.updateApplianceWithInvoice(eq(applianceId), any(ApplianceRequestDto.class), any(MultipartFile.class), eq(email)))
+                .thenReturn(new ApplianceResponseDto());
 
         mockMvc.perform(multipart("/homeowner/edit/{id}", applianceId)
                         .file(appliancePart)
                         .file(invoicePart)
-                        .with(request -> { request.setMethod("PUT"); return request; }) // Force PUT
+                        .with(request -> { request.setMethod("PUT"); return request; })
                         .principal(() -> email)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
@@ -150,4 +146,3 @@ class HomeownerControllerTest {
         verify(applianceService, times(1)).deleteAppliance(applianceId, email);
     }
 }
-
