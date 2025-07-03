@@ -94,6 +94,7 @@ public class AdminController {
     public ResponseEntity<List<ServiceHistoryDto>> getServiceHistoryByHomeowner(@PathVariable String username) {
         List<ServiceHistoryDto> history = serviceRequestService.getServiceHistoryByUsername(username);
         return ResponseEntity.ok(history);
+    }
 
     @GetMapping("/technician-assigned-requests")
     public ResponseEntity<List<ServiceRequestResponseDto>> getAssignedRequests(@RequestParam Long technicianId ) {

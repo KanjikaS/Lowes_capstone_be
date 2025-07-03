@@ -18,7 +18,7 @@ public class Technician extends User {
     private String firstName;
     private String lastName;
     private String phoneNumber;
-    private String specialization; // e.g., "HVAC, Electronics"
+    private String specialization;
     private int experience;
     public Technician() {
         this.setRole(Role.ROLE_TECHNICIAN);

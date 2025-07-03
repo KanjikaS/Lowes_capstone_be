@@ -1,9 +1,8 @@
 package com.capstone.warranty_tracker.controller;
-import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
+import com.capstone.warranty_tracker.dto.*;
+import com.capstone.warranty_tracker.model.CompletionForm;
 import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.repository.TechnicianRepository;
-import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
 import com.capstone.warranty_tracker.service.TechnicianService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,9 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.capstone.warranty_tracker.dto.UpdateRequestStatusDto;
 import com.capstone.warranty_tracker.security.JwtUtil;
-import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
+
 import java.util.List;
 
 
@@ -49,7 +47,6 @@ public class TechnicianController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ✅ GET in-progress requests
     @GetMapping("/requests/in-progress")
     public ResponseEntity<List<ServiceRequestResponseDto>> getInProgressRequests(
             @RequestHeader("Authorization") String authHeader) {
@@ -95,6 +92,10 @@ public class TechnicianController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // or a custom message
         }
 
+        List<ServiceHistoryDto> history = technicianService.getServiceHistoryByTechnician_Id(technicianId);
+        return ResponseEntity.ok(history);
+    }
+
     @GetMapping("/stats")
     public ResponseEntity<TechnicianStatsDto> getTechnicianStats(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
@@ -103,8 +104,30 @@ public class TechnicianController {
     }
 
 
-        List<ServiceHistoryDto> history = technicianService.getServiceHistoryByTechnician_Id(technicianId);
-        return ResponseEntity.ok(history);
+    @PostMapping("/service-request/{requestId}/completion")
+    public ResponseEntity<String> submitCompletionForm(
+            @PathVariable Long requestId,
+            @RequestBody CompletionFormDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        technicianService.saveCompletionForm(requestId, dto, userDetails.getUsername());
+        return ResponseEntity.ok("Completion form submitted successfully.");
     }
+
+
+
+    @GetMapping("/service-request/{requestId}/completion")
+    public ResponseEntity<CompletionFormResponseDto> getCompletionForm(
+            @PathVariable Long requestId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        CompletionFormResponseDto dto = technicianService.getCompletionForm(requestId, userDetails.getUsername());
+        return ResponseEntity.ok(dto);
+    }
+
+
+
+
+
 
 }

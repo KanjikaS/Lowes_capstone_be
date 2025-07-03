@@ -1,19 +1,21 @@
 package com.capstone.warranty_tracker.service;
 
-import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
-import com.capstone.warranty_tracker.dto.UpdateRequestStatusDto;
+import com.capstone.warranty_tracker.dto.*;
 import com.capstone.warranty_tracker.model.ServiceRequest;
 import com.capstone.warranty_tracker.model.ServiceStatus;
 import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.repository.ServiceRequestRepository;
 import com.capstone.warranty_tracker.repository.TechnicianRepository;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
+import com.capstone.warranty_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import java.util.List;
-import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
+
+import com.capstone.warranty_tracker.model.CompletionForm;
+import com.capstone.warranty_tracker.repository.CompletionFormRepository;
+
 
 @Service
 public class TechnicianService {
@@ -195,6 +197,67 @@ public class TechnicianService {
         }).collect(Collectors.toList());
 
     }
+
+    @Autowired
+    private CompletionFormRepository completionFormRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+
+    public void saveCompletionForm(Long requestId, CompletionFormDto dto, String technicianEmail) {
+        Technician technician = (Technician) userRepository.findByEmail(technicianEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Technician not found"));
+
+        ServiceRequest sr = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+
+        if (sr.getTechnician() == null) {
+            throw new IllegalStateException("This request is not assigned to any technician.");
+        }
+
+        if (!sr.getTechnician().getId().equals(technician.getId())) {
+            throw new SecurityException("You are not assigned to this request.");
+        }
+
+        CompletionForm form = new CompletionForm();
+        form.setCompletionDate(dto.getCompletionDate());
+        form.setCompletionTime(dto.getCompletionTime());
+        form.setTechnicianNotes(dto.getTechnicianNotes());
+        form.setConfirmed(dto.isConfirmed());
+        form.setServiceRequest(sr);
+        form.setTechnician(technician);
+
+        completionFormRepository.save(form);
+    }
+
+    public CompletionFormResponseDto getCompletionForm(Long requestId, String technicianEmail) {
+        Technician technician = (Technician) userRepository.findByEmail(technicianEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Technician not found"));
+
+        CompletionForm form = completionFormRepository.findByServiceRequest_Id(requestId);
+        if (form == null) throw new IllegalArgumentException("Form not found.");
+
+        if (!form.getTechnician().getId().equals(technician.getId())) {
+            throw new SecurityException("Not authorized.");
+        }
+
+        CompletionFormResponseDto dto = new CompletionFormResponseDto();
+        dto.setId(form.getId());
+        dto.setCompletionDate(form.getCompletionDate());
+        dto.setCompletionTime(form.getCompletionTime());
+        dto.setTechnicianNotes(form.getTechnicianNotes());
+        dto.setConfirmed(form.isConfirmed());
+        dto.setServiceRequestId(form.getServiceRequest().getId());
+        dto.setTechnicianId(form.getTechnician().getId());
+        dto.setTechnicianEmail(form.getTechnician().getEmail());
+
+        return dto;
+    }
+
+
+
+
 
 
 
