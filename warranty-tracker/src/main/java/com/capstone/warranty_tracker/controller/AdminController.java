@@ -1,5 +1,6 @@
 package com.capstone.warranty_tracker.controller;
 
+import com.capstone.warranty_tracker.dto.ServiceRequestAdminDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
 import com.capstone.warranty_tracker.service.AdminService;
@@ -66,7 +67,7 @@ public class AdminController {
     }
 
     @GetMapping("/all-service-requests")
-    public ResponseEntity<?> getAllServiceRequests() {
+    public ResponseEntity<List<ServiceRequestAdminDto>> getAllServiceRequests() {
         return ResponseEntity.ok(adminService.getAllServiceRequests());
     }
 
