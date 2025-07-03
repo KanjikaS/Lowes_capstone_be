@@ -1,8 +1,4 @@
 package com.capstone.warranty_tracker.config;
-
-// src/main/java/com/capstone/warranty_tracker/config/CorsConfig.java
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
@@ -10,9 +6,9 @@ import org.springframework.web.servlet.config.annotation.*;
 public class CorsConfig implements WebMvcConfigurer {
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(@SuppressWarnings("null") CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("*")//allow all origins for now
                 .allowedMethods("*")
                 .allowedHeaders("*");
     }

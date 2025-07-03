@@ -10,7 +10,14 @@ import java.util.Optional;
 
 @Repository
 public interface TechnicianRepository extends JpaRepository<Technician, Long> {
-    @Query("SELECT t FROM Technician t WHERE t.assignedRequests IS EMPTY")
+    @Query("""
+    SELECT t FROM Technician t 
+    WHERE t.assignedRequests IS EMPTY 
+       OR NOT EXISTS (
+           SELECT sr FROM ServiceRequest sr 
+           WHERE sr.technician = t AND sr.status != com.capstone.warranty_tracker.model.ServiceStatus.COMPLETED
+       )
+""")
     List<Technician> findTechniciansWithNoServiceRequests();
 
     Optional<Technician> findByEmail(String email);

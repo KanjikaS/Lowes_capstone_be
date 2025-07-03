@@ -1,7 +1,7 @@
 package com.capstone.warranty_tracker.controller;
-import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
+
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianAssignmentWrapper;
+import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
 import com.capstone.warranty_tracker.service.AdminService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import com.capstone.warranty_tracker.service.TechnicianService;
@@ -10,36 +10,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
-
 
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 @CrossOrigin(origins = "*")
 public class AdminController {
+
     @Autowired
     private TechnicianService technicianService;
+
     @Autowired
     private ServiceRequestService serviceRequestService;
+
     @Autowired
     private AdminService adminService;
+
     @Autowired
     private ApplianceService applianceService;
 
     @GetMapping("/stats")
-    public ResponseEntity<?> getStats(){
+    public ResponseEntity<?> getStats() {
         return ResponseEntity.ok(adminService.getStats());
     }
 
     @GetMapping("/recent-service-requests")
-    public ResponseEntity<?> getRecentServiceRequests(){
-        return ResponseEntity.ok(ResponseEntity.ok(adminService.getRecentServiceRequest()));
+    public ResponseEntity<?> getRecentServiceRequests() {
+        return ResponseEntity.ok(adminService.getRecentServiceRequest());
     }
 
     @GetMapping("/all-technicians")
@@ -47,10 +46,8 @@ public class AdminController {
         return ResponseEntity.ok(technicianService.getAllTechnicians());
     }
 
-
-  @GetMapping("/available-technicians")
-
-    public ResponseEntity <?> getAvailableTechnicians(){
+    @GetMapping("/available-technicians")
+    public ResponseEntity<?> getAvailableTechnicians() {
         return ResponseEntity.ok(technicianService.getAvailableTechnicians());
     }
 
@@ -69,12 +66,12 @@ public class AdminController {
     }
 
     @GetMapping("/all-service-requests")
-    public ResponseEntity<?> getAllServiceRequests(){
-        return ResponseEntity.ok(ResponseEntity.ok(adminService.getAllServiceRequests()));
+    public ResponseEntity<?> getAllServiceRequests() {
+        return ResponseEntity.ok(adminService.getAllServiceRequests());
     }
 
     @GetMapping("/all-appliances")
-    public ResponseEntity<?>getAllAppliances(){
+    public ResponseEntity<?> getAllAppliances() {
         return ResponseEntity.ok(adminService.getAllAppliances());
     }
 
@@ -97,13 +94,12 @@ public class AdminController {
     }
 
     @GetMapping("/technician-assigned-requests")
-    public ResponseEntity<List<ServiceRequestResponseDto>> getAssignedRequests(@RequestParam Long technicianId ) {
+    public ResponseEntity<List<ServiceRequestResponseDto>> getAssignedRequests(@RequestParam Long technicianId) {
         return ResponseEntity.ok(technicianService.getAssignedRequestsForTechnicianByID(technicianId));
     }
 
     @GetMapping("/technician/in-progress")
-    public ResponseEntity<List<ServiceRequestResponseDto>> getInProgressRequests(@RequestParam String technicianEmail){
-        // Call service method
+    public ResponseEntity<List<ServiceRequestResponseDto>> getInProgressRequests(@RequestParam String technicianEmail) {
         List<ServiceRequestResponseDto> requests = technicianService.getInProgressRequestsForTechnician(technicianEmail);
         return ResponseEntity.ok(requests);
     }
@@ -112,7 +108,6 @@ public class AdminController {
     public ResponseEntity<List<ServiceRequestResponseDto>> getCompletedRequests(@RequestParam String technicianEmail) {
         List<ServiceRequestResponseDto> completed = technicianService.getCompletedRequestsForTechnician(technicianEmail);
         return ResponseEntity.ok(completed);
-
     }
 }
 
