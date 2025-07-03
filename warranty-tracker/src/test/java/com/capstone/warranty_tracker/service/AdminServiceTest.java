@@ -183,6 +183,75 @@ public class AdminServiceTest {
         verify(applianceRepository, times(1)).findAll();
     }
 
+    @Test
+    void assignTechnicianToRequest_shouldAssignSuccessfully() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setAssignedRequests(new ArrayList<>());
+
+        ServiceRequest request = new ServiceRequest();
+        request.setId(100L);
+        request.setStatus(ServiceStatus.REQUESTED);
+
+        when(technicianRepository.findById(1L)).thenReturn(Optional.of(technician));
+        when(serviceRequestRepository.findById(100L)).thenReturn(Optional.of(request));
+
+        boolean result = adminService.assignTechnicianToRequest(1L, 100L);
+
+        assertEquals(true, result);
+        assertEquals(technician, request.getTechnician());
+        assertEquals(ServiceStatus.IN_PROGRESS, request.getStatus());
+        assertEquals(1, technician.getAssignedRequests().size());
+        verify(serviceRequestRepository).save(request);
+        verify(technicianRepository).save(technician);
+    }
+
+    @Test
+    void assignTechnicianToRequest_shouldFail_whenTechnicianNotFound() {
+        when(technicianRepository.findById(1L)).thenReturn(Optional.empty());
+        when(serviceRequestRepository.findById(100L)).thenReturn(Optional.of(new ServiceRequest()));
+
+        boolean result = adminService.assignTechnicianToRequest(1L, 100L);
+
+        assertEquals(false, result);
+        verify(serviceRequestRepository, never()).save(any());
+        verify(technicianRepository, never()).save(any());
+    }
+
+    @Test
+    void assignTechnicianToRequest_shouldFail_whenRequestNotFound() {
+        when(technicianRepository.findById(1L)).thenReturn(Optional.of(new Technician()));
+        when(serviceRequestRepository.findById(100L)).thenReturn(Optional.empty());
+
+        boolean result = adminService.assignTechnicianToRequest(1L, 100L);
+
+        assertEquals(false, result);
+        verify(serviceRequestRepository, never()).save(any());
+        verify(technicianRepository, never()).save(any());
+    }
+
+    @Test
+    void assignTechnicianToRequest_shouldFail_whenAlreadyAssigned() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setAssignedRequests(new ArrayList<>());
+
+        ServiceRequest alreadyAssigned = new ServiceRequest();
+        alreadyAssigned.setId(100L);
+        alreadyAssigned.setTechnician(new Technician()); // Already has one
+
+        when(technicianRepository.findById(1L)).thenReturn(Optional.of(technician));
+        when(serviceRequestRepository.findById(100L)).thenReturn(Optional.of(alreadyAssigned));
+
+        boolean result = adminService.assignTechnicianToRequest(1L, 100L);
+
+        assertEquals(false, result);
+        verify(serviceRequestRepository, never()).save(any());
+        verify(technicianRepository, never()).save(any());
+    }
+
+
+
 
 
 }

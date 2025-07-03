@@ -103,9 +103,6 @@ public class AdminService {
         Optional<Technician> techOpt = technicianRepository.findById(technicianId);
         Optional<ServiceRequest> reqOpt = serviceRequestRepository.findById(requestId);
 
-
-
-
         if (techOpt.isEmpty() || reqOpt.isEmpty()) return false;
 
         Technician technician = techOpt.get();
