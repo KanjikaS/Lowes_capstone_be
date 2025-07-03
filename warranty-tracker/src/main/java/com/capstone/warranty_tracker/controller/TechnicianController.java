@@ -1,10 +1,6 @@
 package com.capstone.warranty_tracker.controller;
+import com.capstone.warranty_tracker.dto.*;
 
-import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
-import com.capstone.warranty_tracker.dto.TechnicianResponseDto;
-import com.capstone.warranty_tracker.dto.UpdateRequestStatusDto;
-import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
-import com.capstone.warranty_tracker.dto.TechnicianStatsDto;
 import com.capstone.warranty_tracker.model.Technician;
 import com.capstone.warranty_tracker.repository.TechnicianRepository;
 import com.capstone.warranty_tracker.service.TechnicianService;
@@ -16,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -88,15 +83,44 @@ public class TechnicianController {
         if (!loggedInTechnician.getId().equals(technicianId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
         List<ServiceHistoryDto> history = technicianService.getServiceHistoryByTechnician_Id(technicianId);
         return ResponseEntity.ok(history);
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<TechnicianStatsDto> getTechnicianStats(
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<TechnicianStatsDto> getTechnicianStats(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         TechnicianStatsDto stats = technicianService.getTechnicianStats(email);
         return ResponseEntity.ok(stats);
     }
+
+
+    @PostMapping("/service-request/{requestId}/completion")
+    public ResponseEntity<String> submitCompletionForm(
+            @PathVariable Long requestId,
+            @RequestBody CompletionFormDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        technicianService.saveCompletionForm(requestId, dto, userDetails.getUsername());
+        return ResponseEntity.ok("Completion form submitted successfully.");
+    }
+
+
+
+    @GetMapping("/service-request/{requestId}/completion")
+    public ResponseEntity<CompletionFormResponseDto> getCompletionForm(
+            @PathVariable Long requestId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        CompletionFormResponseDto dto = technicianService.getCompletionForm(requestId, userDetails.getUsername());
+        return ResponseEntity.ok(dto);
+    }
+
+
+
+
+
+
+
 }

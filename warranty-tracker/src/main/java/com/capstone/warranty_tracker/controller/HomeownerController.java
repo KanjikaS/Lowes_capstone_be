@@ -49,6 +49,7 @@ public class HomeownerController {
         applianceService.addApplianceWithInvoice(dto, invoiceFile, principal.getName());
         return ResponseEntity.ok("Appliance registered successfully with invoice.");
     }
+
     @PostMapping("/service-request")
     public ResponseEntity<?> createServiceRequest(@RequestBody ServiceRequestDto dto, Principal principal) {
         return ResponseEntity.ok(serviceRequestService.createRequest(dto, principal.getName()));
