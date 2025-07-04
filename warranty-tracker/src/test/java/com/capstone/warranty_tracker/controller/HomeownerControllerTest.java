@@ -3,10 +3,14 @@ package com.capstone.warranty_tracker.controller;
 import com.capstone.warranty_tracker.controller.HomeownerController;
 import com.capstone.warranty_tracker.dto.ApplianceRequestDto;
 import com.capstone.warranty_tracker.dto.ApplianceResponseDto;
+import com.capstone.warranty_tracker.dto.ServiceRequestDto;
+import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.security.JwtUtil;
 import com.capstone.warranty_tracker.service.ApplianceService;
 import com.capstone.warranty_tracker.service.ServiceRequestService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,13 +18,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +59,21 @@ class HomeownerControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @RestControllerAdvice
+    static class TestExceptionHandler {
+        @ExceptionHandler(IllegalArgumentException.class)
+        @ResponseStatus(HttpStatus.BAD_REQUEST)
+        public String handleIllegalArgumentException(IllegalArgumentException e) {
+            return e.getMessage();
+        }
+    }
+
+    @BeforeEach
+    void setUp() {
+        // Set up ObjectMapper with JavaTimeModule for LocalDateTime serialization
+        objectMapper.registerModule(new JavaTimeModule());
+    }
 
     @Test
     void testAddAppliance_WithInvoice_ReturnsSuccessMessage() throws Exception {
@@ -144,5 +170,138 @@ class HomeownerControllerTest {
                 .andExpect(header().doesNotExist("Content-Type"));
 
         verify(applianceService, times(1)).deleteAppliance(applianceId, email);
+    }
+
+    @Test
+    void testCreateServiceRequest() throws Exception {
+        // Step 1: Create test data
+        ServiceRequestDto requestDto = new ServiceRequestDto();
+        requestDto.setSerialNumber("SN001");
+        requestDto.setIssueDescription("Washing machine not working");
+        requestDto.setPreferredSlot(LocalDateTime.now().plusDays(1));
+
+        ServiceRequestResponseDto responseDto = new ServiceRequestResponseDto();
+        responseDto.setId(1L);
+        responseDto.setIssueDescription("Washing machine not working");
+        responseDto.setHomeownerName("John Doe");
+        responseDto.setApplianceInfo("Samsung WF45R6100AC (SN: SN001)");
+
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior
+        when(serviceRequestService.createRequest(any(ServiceRequestDto.class), eq("john@test.com")))
+                .thenReturn(responseDto);
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(post("/homeowner/service-request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto))
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.issueDescription").value("Washing machine not working"))
+                .andExpect(jsonPath("$.homeownerName").value("John Doe"));
+    }
+
+    @Test
+    void testGetAllServiceRequests() throws Exception {
+        // Step 1: Create test data
+        ServiceRequestResponseDto responseDto = new ServiceRequestResponseDto();
+        responseDto.setId(1L);
+        responseDto.setIssueDescription("Washing machine not working");
+        responseDto.setHomeownerName("John Doe");
+
+        List<ServiceRequestResponseDto> requests = Arrays.asList(responseDto);
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior
+        when(serviceRequestService.getHomeownerRequests("john@test.com")).thenReturn(requests);
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(get("/homeowner/service-requests")
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].issueDescription").value("Washing machine not working"));
+    }
+
+    @Test
+    void testGetServiceRequestById() throws Exception {
+        // Step 1: Create test data
+        ServiceRequestResponseDto responseDto = new ServiceRequestResponseDto();
+        responseDto.setId(1L);
+        responseDto.setIssueDescription("Washing machine not working");
+        responseDto.setApplianceInfo("Samsung WF45R6100AC (SN: SN001)");
+
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior
+        when(serviceRequestService.getRequestById(1L, "john@test.com"))
+                .thenReturn(responseDto);
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(get("/homeowner/service-request/1")
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.applianceInfo").value("Samsung WF45R6100AC (SN: SN001)"));
+    }
+
+    @Test
+    void testUpdateServiceRequest() throws Exception {
+        // Step 1: Create test data
+        ServiceRequestDto requestDto = new ServiceRequestDto();
+        requestDto.setSerialNumber("SN001");
+        requestDto.setIssueDescription("Updated issue description");
+        requestDto.setPreferredSlot(LocalDateTime.now().plusDays(2));
+
+        ServiceRequestResponseDto responseDto = new ServiceRequestResponseDto();
+        responseDto.setId(1L);
+        responseDto.setIssueDescription("Updated issue description");
+
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior
+        when(serviceRequestService.updateRequest(eq(1L), any(ServiceRequestDto.class), eq("john@test.com")))
+                .thenReturn(responseDto);
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(put("/homeowner/service-request/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto))
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.issueDescription").value("Updated issue description"));
+    }
+
+    @Test
+    void testCancelServiceRequest() throws Exception {
+        // Step 1: Create test data
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior (no return value needed for void method)
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(delete("/homeowner/service-request/1")
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Service request cancelled."));
+    }
+
+    @Test
+    void testGetAllServiceRequestsEmpty() throws Exception {
+        // Step 1: Create test data
+        Principal principal = () -> "john@test.com";
+
+        // Step 2: Set up mock behavior to return empty list
+        when(serviceRequestService.getHomeownerRequests("john@test.com")).thenReturn(Arrays.asList());
+
+        // Step 3: Make the HTTP request and check response
+        mockMvc.perform(get("/homeowner/service-requests")
+                .principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }
