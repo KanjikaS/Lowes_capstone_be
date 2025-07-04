@@ -10,7 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +36,8 @@ public class ServiceRequestRepositoryTest {
     private Appliance testAppliance1;
     private Appliance testAppliance2;
 
-
+    @MockBean
+    private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
