@@ -1,9 +1,6 @@
 package com.capstone.warranty_tracker.repository;
 
-import com.capstone.warranty_tracker.model.Appliance;
-import com.capstone.warranty_tracker.model.Homeowner;
-import com.capstone.warranty_tracker.model.ServiceRequest;
-import com.capstone.warranty_tracker.model.ServiceStatus;
+import com.capstone.warranty_tracker.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,9 @@ public class ServiceRequestRepositoryTest {
 
     @Autowired
     private ApplianceRepository applianceRepository;
+    @Autowired
+    private TechnicianRepository technicianRepository;
+
 
     private Homeowner testHomeowner1;
     private Homeowner testHomeowner2;
@@ -177,4 +177,33 @@ public class ServiceRequestRepositoryTest {
         assertTrue(requests.stream().allMatch(r -> r.getAppliance().getSerialNumber().equals("SN123456")));
         assertTrue(requests.stream().allMatch(r -> r.getAppliance().getBrand().equals("Samsung")));
     }
+
+    @Test
+    void testFindAssignedRequestsByTechnicianEmail_shouldReturnRequestsAssignedToTechnician() {
+
+        Technician technician = new Technician();
+        technician.setFirstName("Alice");
+        technician.setLastName("Brown");
+        technician.setEmail("alice.technician@example.com");
+        technician = technicianRepository.save(technician);
+
+        ServiceRequest request1 = createServiceRequest(testHomeowner1, testAppliance1, "Washing machine not spinning");
+        request1.setTechnician(technician);
+        serviceRequestRepository.save(request1);
+
+        ServiceRequest request2 = createServiceRequest(testHomeowner1, testAppliance1, "Dryer overheating");
+        request2.setTechnician(technician);
+        serviceRequestRepository.save(request2);
+
+        ServiceRequest request3 = createServiceRequest(testHomeowner1, testAppliance1, "Dishwasher leaking");
+        serviceRequestRepository.save(request3);
+
+        List<ServiceRequest> assignedRequests = serviceRequestRepository.findAssignedRequestsByTechnicianEmail("alice.technician@example.com");
+
+        assertEquals(2, assignedRequests.size());
+        assertTrue(assignedRequests.stream().allMatch(sr -> sr.getTechnician().getEmail().equals("alice.technician@example.com")));
+        assertTrue(assignedRequests.stream().anyMatch(sr -> sr.getIssueDescription().equals("Washing machine not spinning")));
+        assertTrue(assignedRequests.stream().anyMatch(sr -> sr.getIssueDescription().equals("Dryer overheating")));
+    }
+
 } 
