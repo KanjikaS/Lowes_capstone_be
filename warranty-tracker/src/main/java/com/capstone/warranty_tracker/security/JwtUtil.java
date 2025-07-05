@@ -52,6 +52,10 @@ public class JwtUtil {
 
     //  Token validation based on email match
     public boolean validateToken(String token, UserDetails user) {
-        return extractEmail(token).equals(user.getUsername()); // Assuming your UserDetails loads by email
+        return extractEmail(token).equals(user.getUsername()) &&
+                !isTokenExpired(token); // Assuming your UserDetails loads by email
+    }
+    private boolean isTokenExpired(String token) {
+        return extractAllClaims(token).getExpiration().before(new Date());
     }
 }
