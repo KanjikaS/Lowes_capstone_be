@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000") // Ensure this matches your frontend
 public class AuthController {
 
     @Autowired private AuthService authService;
@@ -25,23 +25,36 @@ public class AuthController {
         return authService.registerTechnician(request);
     }
 
+    // Changed return type to ResponseEntity<?> to match AuthService
     @PostMapping("/login/homeowner")
-    public ResponseEntity<AuthResponse> loginHomeowner(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> loginHomeowner(@RequestBody AuthRequest request) {
         return authService.loginAsHomeowner(request);
     }
 
+    // Changed return type to ResponseEntity<?> to match AuthService
     @PostMapping("/login/technician")
-    public ResponseEntity<AuthResponse> loginTechnician(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> loginTechnician(@RequestBody AuthRequest request) {
         return authService.loginAsTechnician(request);
     }
 
+    // Changed return type to ResponseEntity<?> to match AuthService
     @PostMapping("/login/admin")
-    public ResponseEntity<AuthResponse> loginAdmin(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> loginAdmin(@RequestBody AuthRequest request) {
         return authService.loginAsAdmin(request);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         return authService.logout(request);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody String email) {
+        return authService.forgotPassword(email);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request) {
+        return authService.resetPassword(request);
     }
 }
