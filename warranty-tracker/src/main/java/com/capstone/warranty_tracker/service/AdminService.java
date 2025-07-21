@@ -107,7 +107,6 @@ public class AdminService {
 
         Technician technician = techOpt.get();
         ServiceRequest request = reqOpt.get();
-        System.out.println("hahahah");
         System.out.println(technician);
         System.out.println(request);
 
@@ -121,7 +120,7 @@ public class AdminService {
         technician.getAssignedRequests().add(request);
 
         //  Change status to IN_PROGRESS
-        request.setStatus(ServiceStatus.IN_PROGRESS);
+        request.setStatus(ServiceStatus.ASSIGNED);
 
         //  Save both entities
         serviceRequestRepository.save(request);
