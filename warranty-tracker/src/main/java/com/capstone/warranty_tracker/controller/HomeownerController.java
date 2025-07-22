@@ -43,7 +43,7 @@ public class HomeownerController {
     @PostMapping(value = "/appliance", consumes = {"multipart/form-data"})
     public ResponseEntity<String> addAppliance(
             @RequestPart("appliance") ApplianceRequestDto dto,
-            @RequestPart("invoice") MultipartFile invoiceFile,
+            @RequestPart(value = "invoice", required = false) MultipartFile invoiceFile,
             Principal principal) throws IOException {
 
         applianceService.addApplianceWithInvoice(dto, invoiceFile, principal.getName());
