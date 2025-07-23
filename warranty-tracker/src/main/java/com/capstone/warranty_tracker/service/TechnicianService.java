@@ -180,7 +180,9 @@ public class TechnicianService {
     public  List<ServiceRequestResponseDto> getAssignedRequestsForTechnicianByID(Long technicianId){
         List<ServiceRequest> requests = serviceRequestRepository.findByTechnician_Id(technicianId);
 
-        return requests.stream().map(sr -> {
+        return requests.stream()
+                .filter(sr -> sr.getStatus() == ServiceStatus.ASSIGNED)
+                .map(sr -> {
             String homeownerName = sr.getHomeowner().getFirstName() + " " + sr.getHomeowner().getLastName();
             String applianceInfo = sr.getAppliance().getBrand() + " " +
                     sr.getAppliance().getModelNumber() + " (" +
