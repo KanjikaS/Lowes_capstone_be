@@ -4,7 +4,9 @@ import com.capstone.warranty_tracker.dto.ServiceRequestDto;
 import com.capstone.warranty_tracker.dto.ServiceRequestResponseDto;
 import com.capstone.warranty_tracker.model.*;
 import com.capstone.warranty_tracker.repository.ApplianceRepository;
+import com.capstone.warranty_tracker.repository.HomeownerRepository;
 import com.capstone.warranty_tracker.repository.ServiceRequestRepository;
+import com.capstone.warranty_tracker.repository.TechnicianRepository;
 import com.capstone.warranty_tracker.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.junit.jupiter.api.BeforeEach;
+import com.capstone.warranty_tracker.dto.AdminScheduleDto;
+import com.capstone.warranty_tracker.dto.ServiceHistoryDto;
+import java.time.LocalDate;
+import static org.mockito.ArgumentMatchers.eq;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceRequestServiceTest {
@@ -35,8 +45,25 @@ class ServiceRequestServiceTest {
     @Mock
     private ServiceRequestRepository serviceRequestRepository;
 
-    @InjectMocks
+    @Mock
+    private HomeownerRepository homeownerRepository;
+
+    @Mock
+    private TechnicianRepository technicianRepository;
+
+    // @InjectMocks
+    @Spy
     private ServiceRequestService serviceRequestService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(serviceRequestService, "userRepository", userRepository);
+        ReflectionTestUtils.setField(serviceRequestService, "applianceRepository", applianceRepository);
+        ReflectionTestUtils.setField(serviceRequestService, "homeownerRepository", homeownerRepository);
+        ReflectionTestUtils.setField(serviceRequestService, "serviceRequestRepository", serviceRequestRepository);
+        ReflectionTestUtils.setField(serviceRequestService, "technicianRepository", technicianRepository);
+    }
 
     @Test
     void testCreateServiceRequestSuccess() {
@@ -140,6 +167,26 @@ class ServiceRequestServiceTest {
     }
 
     @Test
+    void testCreateServiceRequest_InvalidPreferredSlot() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setId(1L);
+        homeowner.setEmail("john@test.com");
+        Appliance appliance = new Appliance();
+        appliance.setId(1L);
+        appliance.setSerialNumber("SN001");
+        appliance.setHomeowner(homeowner);
+        ServiceRequestDto requestDto = new ServiceRequestDto();
+        requestDto.setSerialNumber("SN001");
+        requestDto.setIssueDescription("Washing machine not working");
+        requestDto.setPreferredSlot(LocalDateTime.now().minusDays(1));
+        when(userRepository.findByEmail("john@test.com")).thenReturn(Optional.of(homeowner));
+        when(applianceRepository.findBySerialNumber("SN001")).thenReturn(Optional.of(appliance));
+        assertThrows(IllegalArgumentException.class, () ->
+            serviceRequestService.createRequest(requestDto, "john@test.com")
+        );
+    }
+
+    @Test
     void testGetHomeownerRequests() {
         Homeowner homeowner = new Homeowner();
         homeowner.setId(1L);
@@ -171,6 +218,14 @@ class ServiceRequestServiceTest {
     }
 
     @Test
+    void testGetHomeownerRequests_HomeownerNotFound() {
+        when(userRepository.findByEmail("notfound@test.com")).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () ->
+            serviceRequestService.getHomeownerRequests("notfound@test.com")
+        );
+    }
+
+    @Test
     void testGetRequestById() {
         // Step 1: Create test data
         Homeowner homeowner = new Homeowner();
@@ -197,6 +252,41 @@ class ServiceRequestServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Samsung WF45R6100AC (SN: SN001)", result.getApplianceInfo());
+    }
+
+    @Test
+    void testGetRequestById_ServiceRequestNotFound() {
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () ->
+            serviceRequestService.getRequestById(1L, "john@test.com")
+        );
+    }
+
+    @Test
+    void testGetRequestById_HomeownerNotFound() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("notfound@test.com")).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () ->
+            serviceRequestService.getRequestById(1L, "notfound@test.com")
+        );
+    }
+
+    @Test
+    void testGetRequestById_AccessDenied() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        Homeowner other = new Homeowner();
+        other.setEmail("other@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(other);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(AccessDeniedException.class, () ->
+            serviceRequestService.getRequestById(1L, "owner@test.com")
+        );
     }
 
     @Test
@@ -231,6 +321,59 @@ class ServiceRequestServiceTest {
     }
 
     @Test
+    void testUpdateRequest_AccessDenied() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        Homeowner other = new Homeowner();
+        other.setEmail("other@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(other);
+        sr.setStatus(ServiceStatus.REQUESTED);
+        ServiceRequestDto dto = new ServiceRequestDto();
+        dto.setPreferredSlot(LocalDateTime.now().plusDays(1));
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(AccessDeniedException.class, () ->
+            serviceRequestService.updateRequest(1L, dto, "owner@test.com")
+        );
+    }
+
+    @Test
+    void testUpdateRequest_StatusNotRequested() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        sr.setStatus(ServiceStatus.ASSIGNED);
+        ServiceRequestDto dto = new ServiceRequestDto();
+        dto.setPreferredSlot(LocalDateTime.now().plusDays(1));
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(IllegalStateException.class, () ->
+            serviceRequestService.updateRequest(1L, dto, "owner@test.com")
+        );
+    }
+
+    @Test
+    void testUpdateRequest_InvalidPreferredSlot() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        sr.setStatus(ServiceStatus.REQUESTED);
+        ServiceRequestDto dto = new ServiceRequestDto();
+        dto.setPreferredSlot(LocalDateTime.now().minusDays(1));
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(IllegalArgumentException.class, () ->
+            serviceRequestService.updateRequest(1L, dto, "owner@test.com")
+        );
+    }
+
+    @Test
     void testCancelServiceRequest() {
         //Create test data
         Homeowner homeowner = new Homeowner();
@@ -258,6 +401,59 @@ class ServiceRequestServiceTest {
 
         //Check that the save method was called
         verify(serviceRequestRepository).save(any(ServiceRequest.class));
+    }
+
+    @Test
+    void testCancelRequest_AccessDenied() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        Homeowner other = new Homeowner();
+        other.setEmail("other@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(other);
+        sr.setStatus(ServiceStatus.REQUESTED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(AccessDeniedException.class, () ->
+            serviceRequestService.cancelRequest(1L, "owner@test.com")
+        );
+    }
+
+    @Test
+    void testCancelRequest_StatusNotRequested() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("owner@test.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        sr.setStatus(ServiceStatus.ASSIGNED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.of(homeowner));
+        assertThrows(IllegalStateException.class, () ->
+            serviceRequestService.cancelRequest(1L, "owner@test.com")
+        );
+    }
+
+    @Test
+    void testCancelRequest_ServiceRequestNotFound() {
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () ->
+            serviceRequestService.cancelRequest(1L, "owner@test.com")
+        );
+    }
+
+    @Test
+    void testCancelRequest_HomeownerNotFound() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(new Homeowner());
+        sr.setStatus(ServiceStatus.REQUESTED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(userRepository.findByEmail("owner@test.com")).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () ->
+            serviceRequestService.cancelRequest(1L, "owner@test.com")
+        );
     }
 
     @Test
@@ -292,5 +488,328 @@ class ServiceRequestServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("John Doe", result.get(0).getHomeownerName());
+    }
+
+    @Test
+    void testTechnicianUpdateStatus_Success() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("tech@example.com");
+
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+        sr.setStatus(ServiceStatus.REQUESTED);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+
+        serviceRequestService.technicianUpdateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com");
+        assertEquals(ServiceStatus.IN_PROGRESS, sr.getStatus());
+    }
+
+    @Test
+    void testTechnicianUpdateStatus_Failure_NotAssigned() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(null);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.technicianUpdateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com")
+        );
+    }
+
+    @Test
+    void testTechnicianUpdateStatus_Failure_WrongTechnician() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("other@example.com");
+
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.technicianUpdateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com")
+        );
+    }
+
+    @Test
+    void testTechnicianReschedule_Success() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("tech@example.com");
+
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+        sr.setStatus(ServiceStatus.ASSIGNED);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        // slotTaken returns false
+        doReturn(false).when(serviceRequestService).slotTaken(eq(1L), any(LocalDateTime.class));
+
+        LocalDateTime newSlot = LocalDateTime.now().plusDays(2);
+        serviceRequestService.technicianReschedule(1L, newSlot, "tech@example.com");
+        assertEquals(newSlot, sr.getPreferredSlot());
+        assertEquals(ServiceStatus.RESCHEDULED, sr.getStatus());
+    }
+
+    @Test
+    void testTechnicianReschedule_Failure_SlotTaken() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("tech@example.com");
+
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        // slotTaken returns true
+        doReturn(true).when(serviceRequestService).slotTaken(eq(1L), any(LocalDateTime.class));
+
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.technicianReschedule(1L, LocalDateTime.now().plusDays(2), "tech@example.com")
+        );
+    }
+
+    @Test
+    void testTechnicianReschedule_Failure_WrongTechnician() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("other@example.com");
+
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.technicianReschedule(1L, LocalDateTime.now().plusDays(2), "tech@example.com")
+        );
+    }
+
+    @Test
+    void testAdminApprove_Success() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setStatus(ServiceStatus.REQUESTED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        serviceRequestService.adminApprove(1L);
+        assertEquals(ServiceStatus.ASSIGNED, sr.getStatus());
+    }
+
+    @Test
+    void testUpdateStatus_Success() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("tech@example.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+        sr.setStatus(ServiceStatus.ASSIGNED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        serviceRequestService.updateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com");
+        assertEquals(ServiceStatus.IN_PROGRESS, sr.getStatus());
+    }
+
+    @Test
+    void testUpdateStatus_Failure_NotAssigned() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(null);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.updateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com")
+        );
+    }
+
+    @Test
+    void testUpdateStatus_Failure_WrongTechnician() {
+        Technician technician = new Technician();
+        technician.setId(1L);
+        technician.setEmail("other@example.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setTechnician(technician);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.updateStatus(1L, ServiceStatus.IN_PROGRESS, "tech@example.com")
+        );
+    }
+
+    @Test
+    void testAvailableSlots() {
+        LocalDate day = LocalDate.now().plusDays(1);
+        Long techId = 1L;
+        // All slots available
+        doReturn(false).when(serviceRequestService).slotTaken(eq(techId), any(LocalDateTime.class));
+        List<LocalDateTime> slots = serviceRequestService.availableSlots(techId, day);
+        assertEquals(9, slots.size());
+    }
+
+    @Test
+    void testReschedule_Success() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("user@example.com");
+        Technician technician = new Technician();
+        technician.setId(1L);
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        sr.setTechnician(technician);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        doReturn(false).when(serviceRequestService).slotTaken(eq(1L), any(LocalDateTime.class));
+        LocalDateTime newSlot = LocalDateTime.now().plusDays(2);
+        serviceRequestService.reschedule(1L, newSlot, "user@example.com");
+        assertEquals(newSlot, sr.getPreferredSlot());
+        assertEquals(ServiceStatus.RESCHEDULED, sr.getStatus());
+    }
+
+    @Test
+    void testReschedule_Failure_WrongHomeowner() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("other@example.com");
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.reschedule(1L, LocalDateTime.now().plusDays(2), "user@example.com")
+        );
+    }
+
+    @Test
+    void testReschedule_Failure_TechnicianSlotTaken() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setEmail("user@example.com");
+        Technician technician = new Technician();
+        technician.setId(1L);
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setHomeowner(homeowner);
+        sr.setTechnician(technician);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        doReturn(true).when(serviceRequestService).slotTaken(eq(1L), any(LocalDateTime.class));
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.reschedule(1L, LocalDateTime.now().plusDays(2), "user@example.com")
+        );
+    }
+
+    @Test
+    void testAdminCreate_Success() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setId(1L);
+        Appliance appliance = new Appliance();
+        appliance.setId(2L);
+        Technician technician = new Technician();
+        technician.setId(3L);
+        AdminScheduleDto dto = new AdminScheduleDto();
+        dto.setHomeownerId(1L);
+        dto.setApplianceId(2L);
+        dto.setTechnicianId(3L);
+        dto.setPreferredSlot(LocalDateTime.now().plusDays(1));
+        dto.setIssueDescription("Test issue");
+        when(homeownerRepository.findById(1L)).thenReturn(Optional.of(homeowner));
+        when(applianceRepository.findById(2L)).thenReturn(Optional.of(appliance));
+        when(technicianRepository.findById(3L)).thenReturn(Optional.of(technician));
+        doReturn(false).when(serviceRequestService).slotTaken(eq(3L), any(LocalDateTime.class));
+        serviceRequestService.adminCreate(dto);
+        verify(serviceRequestRepository).save(any(ServiceRequest.class));
+    }
+
+    @Test
+    void testAdminCreate_Failure_SlotTaken() {
+        Homeowner homeowner = new Homeowner();
+        homeowner.setId(1L);
+        Appliance appliance = new Appliance();
+        appliance.setId(2L);
+        Technician technician = new Technician();
+        technician.setId(3L);
+        AdminScheduleDto dto = new AdminScheduleDto();
+        dto.setHomeownerId(1L);
+        dto.setApplianceId(2L);
+        dto.setTechnicianId(3L);
+        dto.setPreferredSlot(LocalDateTime.now().plusDays(1));
+        dto.setIssueDescription("Test issue");
+        when(homeownerRepository.findById(1L)).thenReturn(Optional.of(homeowner));
+        when(applianceRepository.findById(2L)).thenReturn(Optional.of(appliance));
+        when(technicianRepository.findById(3L)).thenReturn(Optional.of(technician));
+        doReturn(true).when(serviceRequestService).slotTaken(eq(3L), any(LocalDateTime.class));
+        assertThrows(RuntimeException.class, () ->
+            serviceRequestService.adminCreate(dto)
+        );
+    }
+
+    @Test
+    void testAssignTechnician_Success() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setStatus(ServiceStatus.REQUESTED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        when(serviceRequestRepository.save(any(ServiceRequest.class))).thenReturn(sr);
+        ServiceRequestResponseDto dto = serviceRequestService.assignTechnician(1L, 2L);
+        assertEquals(ServiceStatus.ASSIGNED, sr.getStatus());
+        assertNotNull(dto);
+    }
+
+    @Test
+    void testAssignTechnician_Failure_WrongStatus() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setStatus(ServiceStatus.ASSIGNED);
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.of(sr));
+        assertThrows(IllegalStateException.class, () ->
+            serviceRequestService.assignTechnician(1L, 2L)
+        );
+    }
+
+    @Test
+    void testAssignTechnician_ServiceRequestNotFound() {
+        when(serviceRequestRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () ->
+            serviceRequestService.assignTechnician(1L, 2L)
+        );
+    }
+
+    @Test
+    void testGetServiceHistoryByAppliance() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setIssueDescription("Test issue");
+        sr.setStatus(ServiceStatus.COMPLETED);
+        when(serviceRequestRepository.findByApplianceId(1L)).thenReturn(List.of(sr));
+        List<ServiceHistoryDto> result = serviceRequestService.getServiceHistoryByAppliance(1L);
+        assertEquals(1, result.size());
+        assertEquals("Test issue", result.get(0).getIssueDescription());
+    }
+
+    @Test
+    void testGetServiceHistoryByUsername() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setIssueDescription("Test issue");
+        sr.setStatus(ServiceStatus.COMPLETED);
+        when(serviceRequestRepository.findByHomeowner_Username("user1")).thenReturn(List.of(sr));
+        List<ServiceHistoryDto> result = serviceRequestService.getServiceHistoryByUsername("user1");
+        assertEquals(1, result.size());
+        assertEquals("Test issue", result.get(0).getIssueDescription());
+    }
+
+    @Test
+    void testGetServiceHistoryByTechnician_Id() {
+        ServiceRequest sr = new ServiceRequest();
+        sr.setId(1L);
+        sr.setIssueDescription("Test issue");
+        sr.setStatus(ServiceStatus.COMPLETED);
+        when(serviceRequestRepository.findByTechnician_Id(2L)).thenReturn(List.of(sr));
+        List<ServiceHistoryDto> result = serviceRequestService.getServiceHistoryByTechnician_Id(2L);
+        assertEquals(1, result.size());
+        assertEquals("Test issue", result.get(0).getIssueDescription());
     }
 }
