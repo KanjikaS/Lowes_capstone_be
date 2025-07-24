@@ -146,7 +146,7 @@ public class ServiceRequestService {
                 .collect(Collectors.toList());
     }
 
-    private boolean slotTaken(Long techId, LocalDateTime slot) {
+    protected boolean slotTaken(Long techId, LocalDateTime slot) {
         return serviceRequestRepository.slotTaken(techId, slot, slot.plusHours(1));
     }
 
