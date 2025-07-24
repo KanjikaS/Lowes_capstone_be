@@ -94,36 +94,6 @@ public class NotificationController {
         }
     }
 
-    /**
-     * Get all appliances with warranties expiring in the next 30 days (Admin only)
-     */
-    @GetMapping("/expiring-next-month")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ApplianceResponseDto>> getAppliancesExpiringNextMonth() {
-        try {
-            LocalDate now = LocalDate.now();
-            LocalDate thirtyDaysFromNow = now.plusDays(30);
-            
-            List<Appliance> allAppliances = applianceRepository.findAll();
-            List<Appliance> expiringAppliances = allAppliances.stream()
-                    .filter(appliance -> {
-                        LocalDate expiryDate = appliance.getWarrantyExpiryDate();
-                        return expiryDate != null && 
-                               !expiryDate.isBefore(now) && 
-                               !expiryDate.isAfter(thirtyDaysFromNow);
-                    })
-                    .collect(Collectors.toList());
-            
-            List<ApplianceResponseDto> response = expiringAppliances.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
     private ApplianceResponseDto convertToDto(Appliance appliance) {
         ApplianceResponseDto dto = new ApplianceResponseDto();
         dto.setId(appliance.getId());
