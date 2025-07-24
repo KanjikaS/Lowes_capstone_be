@@ -200,7 +200,7 @@ public class AdminServiceTest {
 
         assertEquals(true, result);
         assertEquals(technician, request.getTechnician());
-        assertEquals(ServiceStatus.IN_PROGRESS, request.getStatus());
+        assertEquals(ServiceStatus.ASSIGNED, request.getStatus());
         assertEquals(1, technician.getAssignedRequests().size());
         verify(serviceRequestRepository).save(request);
         verify(technicianRepository).save(technician);
